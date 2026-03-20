@@ -18,6 +18,13 @@ To see all available skills, list the `skills/` directory. Each subdirectory con
 
 **DO NOT add a list of specific skills to this file.** This file must never be updated when skills are added, removed, or changed. The `skills/` directory is the single source of truth — list it dynamically instead.
 
+## Project-Local Skills
+
+This repo also has a `.skills/` directory containing skills that are only relevant when working on this repo itself (not shared globally). These are symlinked into `.claude/skills/` and `.omp/skills/` so each agent discovers them natively.
+
+- `.skills/` — project-local, agent-agnostic skills for this repo
+- `.claude/skills/` and `.omp/skills/` — generated symlinks, gitignored
+
 ## Version Control
 
 - Git with [Jujutsu (jj)](https://github.com/martinvonz/jj) also in use

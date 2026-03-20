@@ -1,0 +1,3 @@
+# Agent-specific skill directories (generated symlinks from .skills/)
+.claude/skills/
+.omp/skills/
