@@ -1,0 +1,2 @@
+ - [ ] Skill for creating skills in a cross agent supported way and adding it to my agent-skills project
+ - [ ] Skill for rebasing upstream on top of my current changes
