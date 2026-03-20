@@ -1,2 +1,3 @@
  - [ ] Skill for creating skills in a cross agent supported way and adding it to my agent-skills project
- - [ ] Skill for rebasing upstream on top of my current changes
+ - [x] Skill for rebasing upstream on top of my current changes
+ - [ ] Skill for using my local Obsidian vault as a TODO list and projects repo, not per project TODO.md files. Only interact with the vault via the obsidian CLI so it can't read or mess up other parts of my vault. Keep it contained to a specific directory probably?
