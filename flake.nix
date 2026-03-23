@@ -19,14 +19,17 @@
       "aarch64-darwin"
     ];
 
-    # Generate shell hook ln commands for a list of skills into target dirs
-    # skills: list of { drv, name } attrsets
+    # Generate shell hook ln commands for a list of skill derivations into target dirs
+    # skills: list of skill derivations (each has a single subdir named after the skill)
     # targets: list of relative dir paths like ".claude/skills"
     mkSkillsShellHook = skills: targets: let
-      mkLinksForSkill = s:
+      skillName = skill: builtins.head (builtins.attrNames (builtins.readDir skill));
+      mkLinksForSkill = skill: let
+        name = skillName skill;
+      in
         builtins.concatStringsSep "\n" (map (target: ''
             mkdir -p "${target}"
-            ln -sfn "${s.drv}/${s.name}" "${target}/${s.name}"
+            ln -sfn "${skill}/${name}" "${target}/${name}"
           '')
           targets);
     in
@@ -36,16 +39,25 @@
       pkgs = nixpkgs.legacyPackages.${system};
 
       mkLocalSkill = name:
-        pkgs.runCommand "skill-${name}" {} ''
-          mkdir -p $out/${name}
-          cp -r ${./skills/${name}}/* $out/${name}/
-        '';
+        pkgs.stdenv.mkDerivation {
+          inherit name;
+          src = ./skills/${name};
+          dontUnpack = true;
+          installPhase = ''
+            mkdir -p $out/${name}
+            cp -r $src/* $out/${name}/
+          '';
+        };
 
       mkExternalSkill = name: src: subdir:
-        pkgs.runCommand "skill-${name}" {} ''
-          mkdir -p $out/${name}
-          cp -r ${src}/${subdir}/* $out/${name}/
-        '';
+        pkgs.stdenv.mkDerivation {
+          inherit name src;
+          dontUnpack = true;
+          installPhase = ''
+            mkdir -p $out/${name}
+            cp -r $src/${subdir}/* $out/${name}/
+          '';
+        };
 
       # --- Skills ---
       jujutsu = mkLocalSkill "jujutsu";
@@ -72,12 +84,7 @@
       default = pkgs.mkShell {
         shellHook =
           mkSkillsShellHook
-          [
-            {
-              drv = packages.skill-creator;
-              name = "skill-creator";
-            }
-          ]
+          [packages.skill-creator]
           [".claude/skills" ".omp/skills"];
       };
     });
