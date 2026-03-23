@@ -86,6 +86,7 @@
         };
 
       # --- Skills ---
+      github-skill-installer = mkLocalSkill "github-skill-installer";
       jujutsu = mkLocalSkill "jujutsu";
       obsidian-projects = mkLocalSkill "obsidian-projects";
       update-fork = mkLocalSkill "update-fork";
@@ -93,9 +94,9 @@
         mkExternalSkill "skill-creator"
         anthropic-skills "skills/skill-creator";
 
-      allSkills = [jujutsu obsidian-projects update-fork skill-creator];
+      allSkills = [github-skill-installer jujutsu obsidian-projects update-fork skill-creator];
     in {
-      inherit jujutsu obsidian-projects update-fork skill-creator;
+      inherit github-skill-installer jujutsu obsidian-projects update-fork skill-creator;
 
       default = pkgs.symlinkJoin {
         name = "all-skills";
