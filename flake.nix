@@ -5,12 +5,17 @@
       url = "github:anthropics/skills";
       flake = false;
     };
+    smfh = {
+      url = "github:feel-co/smfh";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs = {
     self,
     nixpkgs,
     anthropic-skills,
+    smfh,
   }: let
     forAllSystems = nixpkgs.lib.genAttrs [
       "x86_64-linux"
@@ -34,6 +39,27 @@
           targets);
     in
       builtins.concatStringsSep "\n" (map mkLinksForSkill skills);
+
+    # Generate an smfh manifest for a list of skill derivations
+    # skills: list of skill derivations
+    # targets: list of relative dir paths (resolved from $HOME)
+    mkManifest = pkgs: skills: targets: let
+      skillName = skill: builtins.head (builtins.attrNames (builtins.readDir skill));
+      mkEntries = skill: let
+        name = skillName skill;
+      in
+        map (target: {
+          type = "symlink";
+          source = "${skill}/${name}";
+          target = "\$HOME/${target}/${name}";
+        })
+        targets;
+    in
+      pkgs.writeText "skills-manifest.json" (builtins.toJSON {
+        files = builtins.concatMap mkEntries skills;
+        clobber_by_default = false;
+        version = 3;
+      });
   in {
     packages = forAllSystems (system: let
       pkgs = nixpkgs.legacyPackages.${system};
@@ -75,6 +101,18 @@
         name = "all-skills";
         paths = allSkills;
       };
+
+      # Script to quickly symlink the skills into place
+      install = let
+        manifest = mkManifest pkgs allSkills [".claude/skills" ".omp/agent/skills"];
+      in
+        pkgs.writeShellApplication {
+          name = "activate-skills";
+          runtimeInputs = [smfh.packages.${system}.default];
+          text = ''
+            smfh -v --impure activate ${manifest}
+          '';
+        };
     });
 
     devShells = forAllSystems (system: let
