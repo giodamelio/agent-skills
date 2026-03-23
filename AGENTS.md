@@ -18,12 +18,14 @@ To see all available skills, list the `skills/` directory. Each subdirectory con
 
 **DO NOT add a list of specific skills to this file.** This file must never be updated when skills are added, removed, or changed. The `skills/` directory is the single source of truth — list it dynamically instead.
 
-## Project-Local Skills
+## Nix Flake
 
-This repo also has a `.skills/` directory containing skills that are only relevant when working on this repo itself (not shared globally). These are symlinked into `.claude/skills/` and `.omp/skills/` so each agent discovers them natively.
+Skills are packaged as Nix derivations in `flake.nix`:
 
-- `.skills/` — project-local, agent-agnostic skills for this repo
-- `.claude/skills/` and `.omp/skills/` — generated symlinks, gitignored
+- `nix build` — builds all skills (local + external) combined into a single output
+- `nix build .#<skill-name>` — builds an individual skill (e.g. `nix build .#jujutsu`)
+- `nix develop` — enters a devshell that symlinks external skills (skill-creator) into `.claude/skills/` and `.omp/skills/` for agent discovery
+- The default package is intended for home-manager consumption to install all skills globally
 
 ## Version Control
 
