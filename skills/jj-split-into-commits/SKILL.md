@@ -2,6 +2,7 @@
 description: Split the current commit's changes into clean, logical commits
 allowed-tools: Bash(jj:*), Bash(jj-hunk:*), Bash(pre-commit:*)
 model: opus
+argument-hint: "[split guidance]"
 ---
 
 ## Context
@@ -12,6 +13,8 @@ model: opus
 ## Task
 
 Split the changes in the current commit (`@`) into clean, logical commits suitable for reviewer comprehension.
+
+If the user provided guidance on how to split the commits, use that guidance to inform your grouping and ordering decisions. User-provided guidance takes priority over default heuristics.
 
 ### Steps
 
@@ -30,6 +33,7 @@ Split the changes in the current commit (`@`) into clean, logical commits suitab
 
 4. **Plan the commit storyline**
    - Study the changes: `jj-hunk list | jq 'keys'`
+   - If the user provided split guidance, use it as the primary basis for grouping and ordering
    - Group files by logical concern (e.g., schema, migrations, services, tests)
    - Order commits as a narrative: setup → core logic → integration → polish
 
