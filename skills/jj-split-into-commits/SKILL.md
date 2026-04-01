@@ -131,11 +131,30 @@ If the user provided guidance on how to split the commits, use that guidance to 
 
 ### Spec Reference
 
-| Spec | Effect |
+**CRITICAL: Every spec MUST have a top-level `"files"` key.** File paths go INSIDE `"files"`, never at the top level.
+
+Correct structure:
+```json
+{"files": {"path/to/file": {"action": "keep"}}, "default": "reset"}
+```
+
+Wrong (missing `"files"` wrapper — will fail):
+```json
+{"path/to/file": {"action": "keep"}, "default": "reset"}
+```
+
+Per-file actions (nested under `"files"`):
+
+| Per-file spec | Effect |
 |------|--------|
 | `{"action": "keep"}` | Include all changes in file |
 | `{"action": "reset"}` | Exclude file from this commit |
 | `{"hunks": [0, 2]}` | Include only hunks 0 and 2 |
+
+Top-level keys (siblings of `"files"`):
+
+| Key | Effect |
+|-----|--------|
 | `"default": "reset"` | Unlisted files excluded (safer) |
 | `"default": "keep"` | Unlisted files included |
 

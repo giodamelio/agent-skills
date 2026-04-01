@@ -246,8 +246,21 @@ jj-hunk squash -r @- '{"files": {"src/cleanup.rs": {"action": "keep"}}, "default
 
 ### Spec Format
 
-The spec is a JSON (or YAML) object that controls which hunks to include:
+The spec is a JSON (or YAML) object that controls which hunks to include.
 
+**CRITICAL: Every spec MUST have a top-level `"files"` key.** File paths go INSIDE `"files"`, never at the top level.
+
+Correct:
+```json
+{"files": {"path/to/file": {"action": "keep"}}, "default": "reset"}
+```
+
+Wrong (missing `"files"` wrapper — will fail):
+```json
+{"path/to/file": {"action": "keep"}, "default": "reset"}
+```
+
+Full example:
 ```json
 {
   "files": {
@@ -260,10 +273,13 @@ The spec is a JSON (or YAML) object that controls which hunks to include:
 }
 ```
 
+Per-file actions (nested under `"files"`):
 - `{"action": "keep"}` — include all changes in this file
 - `{"action": "reset"}` — exclude all changes in this file
 - `{"hunks": [0, 1]}` — include only these hunks (0-indexed)
 - `{"ids": ["hunk-..."]}` — include hunks by stable ID from `jj-hunk list`
+
+Top-level keys (siblings of `"files"`):
 - `"default"` — action for files not listed (`"keep"` or `"reset"`)
 
 Specs can also be read from a file (`--spec-file spec.yaml`) or stdin (`cat spec.json | jj-hunk commit - "msg"`).
