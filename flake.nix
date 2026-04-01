@@ -57,7 +57,7 @@
     in
       pkgs.writeText "skills-manifest.json" (builtins.toJSON {
         files = builtins.concatMap mkEntries skills;
-        clobber_by_default = false;
+        clobber_by_default = true;
         version = 3;
       });
   in {
@@ -126,6 +126,10 @@
           mkSkillsShellHook
           [packages.skill-creator]
           [".claude/skills" ".omp/skills"];
+
+        packages = [
+          smfh.packages.${system}.default
+        ];
       };
     });
   };
