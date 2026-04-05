@@ -8,7 +8,7 @@ This skill helps you work with Jujutsu, a Git-compatible VCS with mutable commit
 
 When running as an agent:
 
-1. **Always use `-m` flags** to provide messages inline rather than relying on editor prompts:
+1. **MUST use `-m` flags** to provide messages inline rather than relying on editor prompts:
 
 ```bash
 # Always use -m to avoid editor prompts
@@ -16,9 +16,13 @@ jj desc -m "message"      # NOT: jj desc
 jj squash -m "message"    # NOT: jj squash (which opens editor)
 ```
 
-Editor-based commands will fail in non-interactive environments.
+Editor-based commands will hang in non-interactive environments.
 
-2. **Verify operations with `jj st`** after mutations (`squash`, `abandon`, `rebase`, `restore`) to confirm the operation succeeded.
+2. **NEVER use `jj squash` without `-m` or `-u`** — without one of these flags, it may open an editor and hang. **NEVER use `jj squash -i`** — it is interactive and will always hang.
+
+3. **MUST always pass a spec argument to `jj-hunk` commands** (e.g. `jj-hunk squash '<spec>'`). Running `jj-hunk squash` without a spec will block waiting on stdin.
+
+4. **Verify operations with `jj st`** after mutations (`squash`, `abandon`, `rebase`, `restore`) to confirm the operation succeeded.
 
 ## Core Concepts
 
@@ -37,7 +41,7 @@ There is no need to run `jj commit`.
 3. Make your changes.
 4. Do NOT run `jj new` when finished — leave that to the next task's step 1.
 
-You may refine the commit using `jj squash` or `jj absorb` as needed
+You may refine the commit using `jj squash -m "message"` or `jj absorb` as needed
 
 ### Change IDs vs Commit IDs
 
@@ -117,11 +121,15 @@ jj next -e
 Move changes from current commit into its parent:
 
 ```bash
-# Squash all changes into parent
-jj squash
+# Squash all changes into parent — MUST use -m or -u to avoid editor
+jj squash -m "combined message"
+
+# Or keep the destination commit's existing message
+jj squash -u
 ```
 
-**Note**: `jj squash -i` opens an interactive UI and will hang in agent environments. Avoid it.
+**NEVER use `jj squash` without `-m` or `-u`** — it may open an editor and hang.
+**NEVER use `jj squash -i`** — it is interactive and will always hang. Use `jj-hunk squash '<spec>'` instead for partial squashing.
 
 ### Splitting Commits
 
@@ -171,7 +179,7 @@ jj restore --from <change-id> path/to/file.txt
 
 ## jj-hunk: Programmatic Hunk Selection
 
-`jj-hunk` enables non-interactive, programmatic hunk selection for splitting, committing, and squashing in jj. It is designed for AI agents and automation. **Whenever you need to split work into multiple commits, STRONGLY prefer jj-hunk over manual `jj restore` workflows.**
+`jj-hunk` enables non-interactive, programmatic hunk selection for splitting, committing, and squashing in jj. It is designed for AI agents and automation. **Whenever you need to split work into multiple commits, you MUST use jj-hunk over manual `jj restore` workflows.** **MUST always pass a spec argument to all jj-hunk commands** — omitting the spec will block on stdin and hang.
 
 ### Availability Check
 
@@ -234,10 +242,10 @@ jj-hunk commit '{"files": {"src/fix.rs": {"action": "keep"}}, "default": "reset"
 
 ### Squashing Selected Hunks
 
-Squash specific changes from a commit into its parent:
+Squash specific changes from a commit into its parent. **MUST always pass a spec argument** — running `jj-hunk squash` without a spec will block waiting on stdin and hang.
 
 ```bash
-# Squash from working copy into parent
+# Squash from working copy into parent — MUST provide spec
 jj-hunk squash '{"files": {"src/cleanup.rs": {"action": "keep"}}, "default": "reset"}'
 
 # Squash a specific revision into its parent
@@ -408,7 +416,7 @@ jj st
 2. **Is it atomic?** One logical change per commit
 3. **Is the message clear?** Use imperative verb phrase in sentence case format with no full stop: "Verb object"
 4. **Are there unrelated changes?** Use `jj restore` to move changes out, then create separate commits
-5. **Should changes be elsewhere?** Use `jj squash` or `jj absorb`
+5. **Should changes be elsewhere?** Use `jj squash -m "message"` (or `-u`) or `jj absorb`
 
 ## Quick Reference
 
@@ -420,7 +428,7 @@ jj st
 | View diff | `jj diff` |
 | New commit | `jj st` then `jj new` only if `@` has changes, then `jj desc -m "message"` |
 | Edit commit | `jj edit <id>` |
-| Squash to parent | `jj squash` |
+| Squash to parent | `jj squash -m "message"` (NEVER without `-m` or `-u`) |
 | Auto-distribute | `jj absorb` |
 | Abandon commit | `jj abandon <id>` |
 | Undo last operation | `jj undo` |
