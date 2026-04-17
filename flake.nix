@@ -5,6 +5,10 @@
       url = "github:anthropics/skills";
       flake = false;
     };
+    code-review-skill = {
+      url = "github:awesome-skills/code-review-skill";
+      flake = false;
+    };
     smfh = {
       url = "github:feel-co/smfh";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -15,6 +19,7 @@
     self,
     nixpkgs,
     anthropic-skills,
+    code-review-skill,
     smfh,
   }: let
     forAllSystems = nixpkgs.lib.genAttrs [
@@ -94,10 +99,13 @@
       skill-creator =
         mkExternalSkill "skill-creator"
         anthropic-skills "skills/skill-creator";
+      code-review =
+        mkExternalSkill "code-review"
+        code-review-skill ".";
 
-      allSkills = [github-skill-installer jujutsu jj-split-into-commits obsidian-projects update-fork skill-creator];
+      allSkills = [github-skill-installer jujutsu jj-split-into-commits obsidian-projects update-fork skill-creator code-review];
     in {
-      inherit github-skill-installer jujutsu jj-split-into-commits obsidian-projects update-fork skill-creator;
+      inherit github-skill-installer jujutsu jj-split-into-commits obsidian-projects update-fork skill-creator code-review;
 
       default = pkgs.symlinkJoin {
         name = "all-skills";

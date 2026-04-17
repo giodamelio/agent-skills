@@ -16,6 +16,22 @@
         "type": "github"
       }
     },
+    "code-review-skill": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1772356400,
+        "narHash": "sha256-maeyfHrPp4SFXp/xfvbL8/6MN6sSwjF0+5df6HS5aNs=",
+        "owner": "awesome-skills",
+        "repo": "code-review-skill",
+        "rev": "f4a63c7b3299e62cc5ec054fd74e064eda1bb6df",
+        "type": "github"
+      },
+      "original": {
+        "owner": "awesome-skills",
+        "repo": "code-review-skill",
+        "type": "github"
+      }
+    },
     "nixpkgs": {
       "locked": {
         "lastModified": 1773840656,
@@ -35,6 +51,7 @@
     "root": {
       "inputs": {
         "anthropic-skills": "anthropic-skills",
+        "code-review-skill": "code-review-skill",
         "nixpkgs": "nixpkgs",
         "smfh": "smfh"
       }
