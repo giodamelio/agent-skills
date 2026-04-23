@@ -1,12 +1,5 @@
 # jj-hunk Spec Format & Command Reference
 
-<!-- SOURCE OF TRUTH: This file is the canonical reference for jj-hunk usage.
-     It is inlined into these skills:
-       - skills/jj-hunk/SKILL.md
-       - skills/jujutsu/SKILL.md (jj-hunk section)
-       - skills/jj-split-into-commits/SKILL.md (step 6)
-     When you update this file, you MUST update all three skills to match. -->
-
 ## The Spec Format
 
 The spec is a JSON object you pass to `jj-hunk` commands to tell them which hunks to include. Getting the spec format right is the single most important thing about using jj-hunk — an invalid spec will either error out or silently do the wrong thing.

@@ -48,47 +48,7 @@ If the user provided guidance on how to split the commits, use that guidance to 
 
    **NEVER use `jj split`** — it is interactive and will hang. Always use `jj-hunk split`.
 
-   First, inspect the hunks:
-   ```bash
-   jj-hunk list
-   ```
-
-   Then split repeatedly, peeling off one commit at a time. Each `jj-hunk split` takes a JSON spec and a commit message. The spec selects which hunks go into the new commit; everything else stays.
-
-   **Spec format — the `"files"` wrapper is required:**
-   ```json
-   {"files": {"path/to/file": {"action": "keep"}}, "default": "reset"}
-   ```
-
-   **Wrong (missing `"files"` — will fail):**
-   ```json
-   {"path/to/file": {"action": "keep"}, "default": "reset"}
-   ```
-
-   Per-file specs (nested under `"files"`):
-
-   | File spec | Effect |
-   |-----------|--------|
-   | `{"action": "keep"}` | Include all hunks in file |
-   | `{"action": "reset"}` | Exclude file from this commit |
-   | `{"hunks": [0, 2]}` | Include only hunks 0 and 2 |
-
-   `"default"` controls unlisted files: `"reset"` excludes them (safer), `"keep"` includes them.
-
-   **File-level selection** — when all hunks in a file belong together:
-   ```bash
-   jj-hunk split '{"files": {"src/db/schema.ts": {"action": "keep"}}, "default": "reset"}' "Add database schema"
-   ```
-
-   **Hunk-level selection** — when a file has mixed concerns:
-   ```bash
-   jj-hunk split '{"files": {"src/lib/utils.ts": {"hunks": [0, 2]}}, "default": "reset"}' "Refactor utils"
-   ```
-
-   **Mixed selection** — combine file-level and hunk-level:
-   ```bash
-   jj-hunk split '{"files": {"src/db/schema.ts": {"action": "keep"}, "src/api/routes.ts": {"hunks": [0]}}, "default": "reset"}' "Add users endpoint"
-   ```
+   First, inspect the hunks with `jj-hunk list`. Then split repeatedly, peeling off one commit at a time. Each `jj-hunk split` takes a JSON spec and a commit message. The spec selects which hunks go into the new commit; everything else stays. See the [jj-hunk reference](#jj-hunk-reference) below for spec format and commands.
 
    Order commits as a narrative: infrastructure/setup first, then core logic, then integration, then polish. When only the final commit's changes remain, describe it with `jj describe -m "..."`.
 
@@ -105,6 +65,10 @@ If the user provided guidance on how to split the commits, use that guidance to 
    # Verify each commit has sensible content
    jj diff -r <rev> --stat
    ```
+
+### jj-hunk Reference
+
+{{ include "refs" "jj-hunk-spec.md" }}
 
 ### Rules
 

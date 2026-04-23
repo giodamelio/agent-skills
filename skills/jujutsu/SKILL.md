@@ -179,67 +179,7 @@ jj restore --from <change-id> path/to/file.txt
 
 ## jj-hunk: Programmatic Hunk Selection
 
-**NEVER use `jj split`, `jj commit`, or `jj squash -i`** — these are interactive commands that will hang in agent environments. Always use `jj-hunk` instead. All `jj-hunk` commands require a spec argument — omitting it will block on stdin and hang.
-
-### Spec Format
-
-The spec is a JSON object that controls which hunks to include. The spec has exactly two possible top-level keys: `"files"` and `"default"`. File paths are **always nested inside `"files"`** — never at the top level.
-
-**Correct:**
-```json
-{"files": {"src/main.rs": {"action": "keep"}}, "default": "reset"}
-```
-
-**Wrong — will fail:**
-```json
-{"src/main.rs": {"action": "keep"}, "default": "reset"}
-```
-
-Per-file specs (nested under `"files"`):
-
-| File spec | What it does |
-|-----------|-------------|
-| `{"action": "keep"}` | Include all hunks in this file |
-| `{"action": "reset"}` | Exclude all hunks in this file |
-| `{"hunks": [0, 2]}` | Include only these hunks (0-indexed) |
-| `{"ids": ["hunk-7c3d..."]}` | Include hunks by their stable ID |
-
-`"default"` controls unlisted files: `"reset"` excludes them (safer), `"keep"` includes them.
-
-### Common Mistakes
-
-1. **Missing `"files"` wrapper** — file paths at the top level
-2. **`"default"` inside `"files"`** — it is a sibling, not a child
-3. **Bare string for a file spec** — use `{"action": "keep"}`, not `"keep"`
-4. **`"action"` at the top level** — use `"default"`, not `"action"`
-
-### Commands
-
-```bash
-# List hunks (always do this first)
-jj-hunk list
-jj-hunk list --files
-jj-hunk list --rev @-
-
-# Split: selected hunks → new commit, rest stays
-jj-hunk split '<spec>' "commit message"
-jj-hunk split -r @- '<spec>' "commit message"
-
-# Commit: selected hunks from working copy → new commit
-jj-hunk commit '<spec>' "commit message"
-
-# Squash: selected hunks → parent commit
-jj-hunk squash '<spec>'
-jj-hunk squash -r @- '<spec>'
-```
-
-### Workflow
-
-1. `jj-hunk list --files` to see what changed
-2. Group changes by logical concern
-3. `jj-hunk split` repeatedly, peeling off one commit at a time
-4. `jj describe -m "..."` for the final remaining commit
-5. `jj log` to verify
+{{ include "refs" "jj-hunk-spec.md" }}
 
 ## Working with Bookmarks (Branches)
 
