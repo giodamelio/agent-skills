@@ -73,10 +73,14 @@
         pkgs.stdenv.mkDerivation {
           inherit name;
           src = ./skills/${name};
+          refs = ./references;
+          nativeBuildInputs = with pkgs; [gomplate fd];
           dontUnpack = true;
           installPhase = ''
-            mkdir -p $out/${name}
-            cp -r $src/* $out/${name}/
+            mkdir -p "$out/${name}"
+            cp -r "$src"/* "$out/${name}/"
+            chmod -R u+w "$out/${name}/"
+            fd -e md . "$out/${name}" -x gomplate -d "refs=file://$refs/" -f {} -o {}
           '';
         };
 
@@ -137,6 +141,7 @@
 
         packages = [
           smfh.packages.${system}.default
+          pkgs.gomplate
         ];
       };
     });

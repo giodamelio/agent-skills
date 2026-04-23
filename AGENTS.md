@@ -29,15 +29,17 @@ Skills are packaged as Nix derivations in `flake.nix`:
 
 ## Shared References
 
-The `references/` directory contains canonical source-of-truth files that are **manually inlined** into multiple skills. This is necessary because skills are packaged independently and cannot reference external files at runtime.
+The `references/` directory contains canonical source-of-truth files that are included into skills at build time using [gomplate](https://docs.gomplate.ca/) templating. When `nix build` runs, gomplate processes each skill's files, replacing `{{ include "refs" "filename.md" }}` directives with the referenced file's content.
 
-**CRITICAL: Updates flow both ways.** If you update a reference file, you MUST update every skill that inlines its content. If you update the inlined content in any skill, you MUST also update the reference file AND all other skills that inline it. The reference file's header comment lists all consuming skills. Failing to sync means skills will diverge and agents will get inconsistent instructions.
+To include a reference file in a skill, use: `{{ include "refs" "filename.md" }}`
+
+Edit the reference file and rebuild — all consuming skills pick up the changes automatically.
 
 Current reference files:
-- `references/jj-hunk-spec.md` — jj-hunk spec format and command reference. Inlined into:
-  - `skills/jj-hunk/SKILL.md` (full version)
-  - `skills/jujutsu/SKILL.md` (condensed version in the jj-hunk section)
-  - `skills/jj-split-into-commits/SKILL.md` (condensed version in step 6)
+- `references/jj-hunk-spec.md` — jj-hunk spec format and command reference. Included by:
+  - `skills/jj-hunk/SKILL.md`
+  - `skills/jujutsu/SKILL.md`
+  - `skills/jj-split-into-commits/SKILL.md`
 
 ## Version Control
 
