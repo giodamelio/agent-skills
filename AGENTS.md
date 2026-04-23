@@ -27,6 +27,18 @@ Skills are packaged as Nix derivations in `flake.nix`:
 - `nix develop` — enters a devshell that symlinks external skills (skill-creator) into `.claude/skills/` and `.omp/skills/` for agent discovery
 - The default package is intended for home-manager consumption to install all skills globally
 
+## Shared References
+
+The `references/` directory contains canonical source-of-truth files that are **manually inlined** into multiple skills. This is necessary because skills are packaged independently and cannot reference external files at runtime.
+
+**CRITICAL: Updates flow both ways.** If you update a reference file, you MUST update every skill that inlines its content. If you update the inlined content in any skill, you MUST also update the reference file AND all other skills that inline it. The reference file's header comment lists all consuming skills. Failing to sync means skills will diverge and agents will get inconsistent instructions.
+
+Current reference files:
+- `references/jj-hunk-spec.md` — jj-hunk spec format and command reference. Inlined into:
+  - `skills/jj-hunk/SKILL.md` (full version)
+  - `skills/jujutsu/SKILL.md` (condensed version in the jj-hunk section)
+  - `skills/jj-split-into-commits/SKILL.md` (condensed version in step 6)
+
 ## Version Control
 
 - Git with [Jujutsu (jj)](https://github.com/martinvonz/jj) also in use
