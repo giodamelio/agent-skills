@@ -133,7 +133,7 @@ jj squash -u
 
 ### Splitting Commits
 
-**Warning**: `jj split` is interactive and will hang in agent environments. **Prefer `jj-hunk`** for non-interactive splitting — see [jj-hunk](#jj-hunk-programmatic-hunk-selection) below. As a fallback (if jj-hunk is not installed), use `jj restore` to move changes out, then create separate commits manually.
+**NEVER use `jj split`** — it is interactive and will hang in agent environments. Use `jj-hunk split` instead — see [jj-hunk](#jj-hunk-programmatic-hunk-selection) below.
 
 ### Absorbing Changes
 
@@ -179,132 +179,67 @@ jj restore --from <change-id> path/to/file.txt
 
 ## jj-hunk: Programmatic Hunk Selection
 
-`jj-hunk` enables non-interactive, programmatic hunk selection for splitting, committing, and squashing in jj. It is designed for AI agents and automation. **Whenever you need to split work into multiple commits, you MUST use jj-hunk over manual `jj restore` workflows.** **MUST always pass a spec argument to all jj-hunk commands** — omitting the spec will block on stdin and hang.
-
-### Availability Check
-
-Before using jj-hunk, verify it is installed:
-
-```bash
-jj-hunk --help
-```
-
-If the command is not found, fall back to the manual `jj restore` approach described in [Splitting Commits](#splitting-commits).
-
-### Listing Hunks
-
-Inspect what hunks exist in the current changes before deciding how to split:
-
-```bash
-# List all hunks in the working copy (JSON output)
-jj-hunk list
-
-# List hunks for a specific revision
-jj-hunk list --rev @
-
-# List files only (with hunk counts)
-jj-hunk list --files
-
-# Output as YAML
-jj-hunk list --format yaml
-
-# Generate a spec template with stable hunk IDs (useful as a starting point)
-jj-hunk list --spec-template --format yaml
-
-# Filter by path
-jj-hunk list --include 'src/**' --exclude '**/*.test.rs'
-```
-
-### Splitting Changes into Multiple Commits
-
-Split the working copy (or a revision) into two commits — selected hunks go to the first commit, the rest to the second:
-
-```bash
-# Split by file: keep src/foo.rs in first commit, reset everything else
-jj-hunk split '{"files": {"src/foo.rs": {"action": "keep"}}, "default": "reset"}' "first commit message"
-
-# Split by specific hunks (0-indexed)
-jj-hunk split '{"files": {"src/foo.rs": {"hunks": [0, 1]}}, "default": "reset"}' "first commit message"
-
-# Split a specific revision (not just working copy)
-jj-hunk split -r @- '{"files": {"src/foo.rs": {"action": "keep"}}, "default": "reset"}' "first commit message"
-```
-
-To iteratively split into many commits, repeat `jj-hunk split` — each call peels off one commit and leaves the rest.
-
-### Committing Selected Hunks
-
-Commit only specific changes from the working copy, leaving the rest uncommitted:
-
-```bash
-jj-hunk commit '{"files": {"src/fix.rs": {"action": "keep"}}, "default": "reset"}' "bug fix"
-```
-
-### Squashing Selected Hunks
-
-Squash specific changes from a commit into its parent. **MUST always pass a spec argument** — running `jj-hunk squash` without a spec will block waiting on stdin and hang.
-
-```bash
-# Squash from working copy into parent — MUST provide spec
-jj-hunk squash '{"files": {"src/cleanup.rs": {"action": "keep"}}, "default": "reset"}'
-
-# Squash a specific revision into its parent
-jj-hunk squash -r @- '{"files": {"src/cleanup.rs": {"action": "keep"}}, "default": "reset"}'
-```
+**NEVER use `jj split`, `jj commit`, or `jj squash -i`** — these are interactive commands that will hang in agent environments. Always use `jj-hunk` instead. All `jj-hunk` commands require a spec argument — omitting it will block on stdin and hang.
 
 ### Spec Format
 
-The spec is a JSON (or YAML) object that controls which hunks to include.
+The spec is a JSON object that controls which hunks to include. The spec has exactly two possible top-level keys: `"files"` and `"default"`. File paths are **always nested inside `"files"`** — never at the top level.
 
-**CRITICAL: Every spec MUST have a top-level `"files"` key.** File paths go INSIDE `"files"`, never at the top level.
-
-Correct:
+**Correct:**
 ```json
-{"files": {"path/to/file": {"action": "keep"}}, "default": "reset"}
+{"files": {"src/main.rs": {"action": "keep"}}, "default": "reset"}
 ```
 
-Wrong (missing `"files"` wrapper — will fail):
+**Wrong — will fail:**
 ```json
-{"path/to/file": {"action": "keep"}, "default": "reset"}
+{"src/main.rs": {"action": "keep"}, "default": "reset"}
 ```
 
-Full example:
-```json
-{
-  "files": {
-    "path/to/file": {"action": "keep"},
-    "path/to/other": {"action": "reset"},
-    "path/to/partial": {"hunks": [0, 2]},
-    "path/to/by-id": {"ids": ["hunk-7c3d..."]}
-  },
-  "default": "reset"
-}
-```
+Per-file specs (nested under `"files"`):
 
-Per-file actions (nested under `"files"`):
-- `{"action": "keep"}` — include all changes in this file
-- `{"action": "reset"}` — exclude all changes in this file
-- `{"hunks": [0, 1]}` — include only these hunks (0-indexed)
-- `{"ids": ["hunk-..."]}` — include hunks by stable ID from `jj-hunk list`
+| File spec | What it does |
+|-----------|-------------|
+| `{"action": "keep"}` | Include all hunks in this file |
+| `{"action": "reset"}` | Exclude all hunks in this file |
+| `{"hunks": [0, 2]}` | Include only these hunks (0-indexed) |
+| `{"ids": ["hunk-7c3d..."]}` | Include hunks by their stable ID |
 
-Top-level keys (siblings of `"files"`):
-- `"default"` — action for files not listed (`"keep"` or `"reset"`)
+`"default"` controls unlisted files: `"reset"` excludes them (safer), `"keep"` includes them.
 
-Specs can also be read from a file (`--spec-file spec.yaml`) or stdin (`cat spec.json | jj-hunk commit - "msg"`).
+### Common Mistakes
 
-### Recommended Workflow: Clean Commit History
+1. **Missing `"files"` wrapper** — file paths at the top level
+2. **`"default"` inside `"files"`** — it is a sibling, not a child
+3. **Bare string for a file spec** — use `{"action": "keep"}`, not `"keep"`
+4. **`"action"` at the top level** — use `"default"`, not `"action"`
 
-When you have a large set of changes that should be multiple commits:
-
-1. **List the hunks** to understand what changed: `jj-hunk list --files`
-2. **Group files by logical concern** (e.g. schema, services, tests)
-3. **Split iteratively**, peeling off one commit at a time:
+### Commands
 
 ```bash
-jj-hunk split '{"files": {"src/db/schema.ts": {"action": "keep"}}, "default": "reset"}' "Add database schema"
-jj-hunk split '{"files": {"src/api/routes.ts": {"action": "keep"}}, "default": "reset"}' "Add API routes"
-jj desc -m "Add UI components"  # remaining changes become the last commit
+# List hunks (always do this first)
+jj-hunk list
+jj-hunk list --files
+jj-hunk list --rev @-
+
+# Split: selected hunks → new commit, rest stays
+jj-hunk split '<spec>' "commit message"
+jj-hunk split -r @- '<spec>' "commit message"
+
+# Commit: selected hunks from working copy → new commit
+jj-hunk commit '<spec>' "commit message"
+
+# Squash: selected hunks → parent commit
+jj-hunk squash '<spec>'
+jj-hunk squash -r @- '<spec>'
 ```
+
+### Workflow
+
+1. `jj-hunk list --files` to see what changed
+2. Group changes by logical concern
+3. `jj-hunk split` repeatedly, peeling off one commit at a time
+4. `jj describe -m "..."` for the final remaining commit
+5. `jj log` to verify
 
 ## Working with Bookmarks (Branches)
 

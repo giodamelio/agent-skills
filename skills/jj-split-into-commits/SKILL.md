@@ -46,74 +46,51 @@ If the user provided guidance on how to split the commits, use that guidance to 
 
 6. **Split iteratively using jj-hunk**
 
-   First, inspect the hunks to understand what you're working with:
+   **NEVER use `jj split`** — it is interactive and will hang. Always use `jj-hunk split`.
 
+   First, inspect the hunks:
    ```bash
    jj-hunk list
    ```
 
-   Example output:
+   Then split repeatedly, peeling off one commit at a time. Each `jj-hunk split` takes a JSON spec and a commit message. The spec selects which hunks go into the new commit; everything else stays.
+
+   **Spec format — the `"files"` wrapper is required:**
    ```json
-   {
-     "src/db/schema.ts": [
-       {"index": 0, "type": "insert", "added": "import { pgTable }...\n"},
-       {"index": 1, "type": "insert", "added": "export const users = pgTable...\n"},
-       {"index": 2, "type": "insert", "added": "export const posts = pgTable...\n"}
-     ],
-     "src/api/routes.ts": [
-       {"index": 0, "type": "replace", "removed": "// TODO\n", "added": "app.get('/users', ...);\n"},
-       {"index": 1, "type": "insert", "added": "app.get('/posts', ...);\n"}
-     ],
-     "src/lib/utils.ts": [
-       {"index": 0, "type": "replace", "removed": "function old()...\n", "added": "function new()...\n"},
-       {"index": 1, "type": "insert", "added": "export function helper()...\n"},
-       {"index": 2, "type": "delete", "removed": "// dead code\n"}
-     ]
-   }
+   {"files": {"path/to/file": {"action": "keep"}}, "default": "reset"}
    ```
 
-   **File-level selection** — when all hunks in a file belong together:
+   **Wrong (missing `"files"` — will fail):**
+   ```json
+   {"path/to/file": {"action": "keep"}, "default": "reset"}
+   ```
 
+   Per-file specs (nested under `"files"`):
+
+   | File spec | Effect |
+   |-----------|--------|
+   | `{"action": "keep"}` | Include all hunks in file |
+   | `{"action": "reset"}` | Exclude file from this commit |
+   | `{"hunks": [0, 2]}` | Include only hunks 0 and 2 |
+
+   `"default"` controls unlisted files: `"reset"` excludes them (safer), `"keep"` includes them.
+
+   **File-level selection** — when all hunks in a file belong together:
    ```bash
-   # Keep entire file, reset everything else
-   jj-hunk split '{"files": {"src/db/schema.ts": {"action": "keep"}}, "default": "reset"}' "feat: add database schema"
+   jj-hunk split '{"files": {"src/db/schema.ts": {"action": "keep"}}, "default": "reset"}' "Add database schema"
    ```
 
    **Hunk-level selection** — when a file has mixed concerns:
-
    ```bash
-   # src/lib/utils.ts has refactoring (hunks 0, 2) and new feature (hunk 1)
-   # Extract just the refactoring hunks
-   jj-hunk split '{"files": {"src/lib/utils.ts": {"hunks": [0, 2]}}, "default": "reset"}' "refactor: clean up utils"
-
-   # Now hunk 1 remains in working copy for the feature commit
+   jj-hunk split '{"files": {"src/lib/utils.ts": {"hunks": [0, 2]}}, "default": "reset"}' "Refactor utils"
    ```
 
    **Mixed selection** — combine file-level and hunk-level:
-
    ```bash
-   # Keep all of schema.ts, but only hunk 0 from routes.ts
-   jj-hunk split '{"files": {"src/db/schema.ts": {"action": "keep"}, "src/api/routes.ts": {"hunks": [0]}}, "default": "reset"}' "feat: add users endpoint"
-
-   # Next commit: remaining routes.ts hunk 1
-   jj-hunk split '{"files": {"src/api/routes.ts": {"hunks": [1]}}, "default": "reset"}' "feat: add posts endpoint"
+   jj-hunk split '{"files": {"src/db/schema.ts": {"action": "keep"}, "src/api/routes.ts": {"hunks": [0]}}, "default": "reset"}' "Add users endpoint"
    ```
 
-   **Typical narrative sequence:**
-
-   ```bash
-   # 1. Infrastructure/setup first
-   jj-hunk split '{"files": {"src/db/schema.ts": {"action": "keep"}, "drizzle.config.ts": {"action": "keep"}}, "default": "reset"}' "feat: add database schema"
-
-   # 2. Core logic
-   jj-hunk split '{"files": {"src/lib/utils.ts": {"hunks": [0, 2]}}, "default": "reset"}' "refactor: prepare utils for new feature"
-
-   # 3. Feature implementation
-   jj-hunk split '{"files": {"src/lib/utils.ts": {"action": "keep"}, "src/api/routes.ts": {"hunks": [0]}}, "default": "reset"}' "feat: add user routes"
-
-   # 4. Remaining changes described as final commit
-   jj describe -m "feat: add post routes"
-   ```
+   Order commits as a narrative: infrastructure/setup first, then core logic, then integration, then polish. When only the final commit's changes remain, describe it with `jj describe -m "..."`.
 
 7. **Describe the final commit**
    ```bash
@@ -128,35 +105,6 @@ If the user provided guidance on how to split the commits, use that guidance to 
    # Verify each commit has sensible content
    jj diff -r <rev> --stat
    ```
-
-### Spec Reference
-
-**CRITICAL: Every spec MUST have a top-level `"files"` key.** File paths go INSIDE `"files"`, never at the top level.
-
-Correct structure:
-```json
-{"files": {"path/to/file": {"action": "keep"}}, "default": "reset"}
-```
-
-Wrong (missing `"files"` wrapper — will fail):
-```json
-{"path/to/file": {"action": "keep"}, "default": "reset"}
-```
-
-Per-file actions (nested under `"files"`):
-
-| Per-file spec | Effect |
-|------|--------|
-| `{"action": "keep"}` | Include all changes in file |
-| `{"action": "reset"}` | Exclude file from this commit |
-| `{"hunks": [0, 2]}` | Include only hunks 0 and 2 |
-
-Top-level keys (siblings of `"files"`):
-
-| Key | Effect |
-|-----|--------|
-| `"default": "reset"` | Unlisted files excluded (safer) |
-| `"default": "keep"` | Unlisted files included |
 
 ### Rules
 
