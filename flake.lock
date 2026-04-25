@@ -53,6 +53,7 @@
         "anthropic-skills": "anthropic-skills",
         "code-review-skill": "code-review-skill",
         "nixpkgs": "nixpkgs",
+        "rust-skills": "rust-skills",
         "smfh": "smfh"
       }
     },
@@ -74,6 +75,22 @@
       "original": {
         "owner": "oxalica",
         "repo": "rust-overlay",
+        "type": "github"
+      }
+    },
+    "rust-skills": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1768830312,
+        "narHash": "sha256-y5XW62XXArJ60z3/fJE/KED+oILn9qpiUkcGI27dAxc=",
+        "owner": "leonardomso",
+        "repo": "rust-skills",
+        "rev": "0373001db0b774a84a691847bc2d248186063f39",
+        "type": "github"
+      },
+      "original": {
+        "owner": "leonardomso",
+        "repo": "rust-skills",
         "type": "github"
       }
     },
