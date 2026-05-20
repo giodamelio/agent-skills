@@ -16,6 +16,22 @@
         "type": "github"
       }
     },
+    "awesome-llm-apps": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1778360346,
+        "narHash": "sha256-j58mPzZOJQZ236BMa8RUM5bUe0eyPo1/LMgPxF/uUzQ=",
+        "owner": "Shubhamsaboo",
+        "repo": "awesome-llm-apps",
+        "rev": "795212bfb3ba7d25db04c7879d39621429fd093d",
+        "type": "github"
+      },
+      "original": {
+        "owner": "Shubhamsaboo",
+        "repo": "awesome-llm-apps",
+        "type": "github"
+      }
+    },
     "code-review-skill": {
       "flake": false,
       "locked": {
@@ -51,6 +67,7 @@
     "root": {
       "inputs": {
         "anthropic-skills": "anthropic-skills",
+        "awesome-llm-apps": "awesome-llm-apps",
         "code-review-skill": "code-review-skill",
         "nixpkgs": "nixpkgs",
         "rust-skills": "rust-skills",
