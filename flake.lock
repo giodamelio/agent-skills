@@ -3,11 +3,11 @@
     "anthropic-skills": {
       "flake": false,
       "locked": {
-        "lastModified": 1774196161,
-        "narHash": "sha256-QAy9ulbKaK5QWiGiXYsxav+bMhhmqU8pCS7P0fWxLlk=",
+        "lastModified": 1779199866,
+        "narHash": "sha256-GMXFJSePrpEvhzMQ82YI9Z10BDkuFK/lXUDELclvQ4c=",
         "owner": "anthropics",
         "repo": "skills",
-        "rev": "887114fd09f8f24a7e6c907f9ee505348498ab6a",
+        "rev": "690f15cac7f7b4c055c5ab109c79ed9259934081",
         "type": "github"
       },
       "original": {
@@ -35,11 +35,11 @@
     "code-review-skill": {
       "flake": false,
       "locked": {
-        "lastModified": 1772356400,
-        "narHash": "sha256-maeyfHrPp4SFXp/xfvbL8/6MN6sSwjF0+5df6HS5aNs=",
+        "lastModified": 1778305998,
+        "narHash": "sha256-AGDlwfN5YdleVz/ow5ilSz3sEr2rauBN0C0HS2ryvig=",
         "owner": "awesome-skills",
         "repo": "code-review-skill",
-        "rev": "f4a63c7b3299e62cc5ec054fd74e064eda1bb6df",
+        "rev": "eb12fb247ba09fd8a2bce0d1ecafa99df0bf4891",
         "type": "github"
       },
       "original": {
@@ -50,11 +50,11 @@
     },
     "nixpkgs": {
       "locked": {
-        "lastModified": 1773840656,
-        "narHash": "sha256-9tpvMGFteZnd3gRQZFlRCohVpqooygFuy9yjuyRL2C0=",
+        "lastModified": 1778869304,
+        "narHash": "sha256-30sZNZoA1cqF5JNO9fVX+wgiQYjB7HJqqJ4ztCDeBZE=",
         "owner": "NixOS",
         "repo": "nixpkgs",
-        "rev": "9cf7092bdd603554bd8b63c216e8943cf9b12512",
+        "rev": "d233902339c02a9c334e7e593de68855ad26c4cb",
         "type": "github"
       },
       "original": {
@@ -82,11 +82,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1773889863,
-        "narHash": "sha256-tSsmZOHBgq4qfu5MNCAEsKZL1cI4avNLw2oUTXWeb74=",
+        "lastModified": 1776136407,
+        "narHash": "sha256-Cp8XrVLGruSDBTRs8L4LmvaEcd76tHHU9esLk7Ysa4E=",
         "owner": "oxalica",
         "repo": "rust-overlay",
-        "rev": "dbfd51be2692cb7022e301d14c139accb4ee63f0",
+        "rev": "753568957a87312ed599cba5699e67126eded6c0",
         "type": "github"
       },
       "original": {
@@ -98,11 +98,11 @@
     "rust-skills": {
       "flake": false,
       "locked": {
-        "lastModified": 1768830312,
-        "narHash": "sha256-y5XW62XXArJ60z3/fJE/KED+oILn9qpiUkcGI27dAxc=",
+        "lastModified": 1777196355,
+        "narHash": "sha256-wAOlWjM7YBwNoVevhoI+AuI7q0ysJq4woJBMp+YjSHA=",
         "owner": "leonardomso",
         "repo": "rust-skills",
-        "rev": "0373001db0b774a84a691847bc2d248186063f39",
+        "rev": "89910e8585331dabbecd400ae132b4070ecf24af",
         "type": "github"
       },
       "original": {
@@ -120,11 +120,11 @@
         "systems": "systems"
       },
       "locked": {
-        "lastModified": 1773962779,
-        "narHash": "sha256-Zq9qtW10p2HjNlrcBajONXrdiQxhZWqCRs8LNyM1adA=",
+        "lastModified": 1778715147,
+        "narHash": "sha256-OKpQnhlzwcXH1aJvu1NKlepXVPALkZx5GoyhJ8aKLKs=",
         "owner": "feel-co",
         "repo": "smfh",
-        "rev": "5a1081574ebd34c46d1abe4e9665331b3fcda6a2",
+        "rev": "ed2dea049b06dcd44cb93a443432c02c42b4b882",
         "type": "github"
       },
       "original": {
