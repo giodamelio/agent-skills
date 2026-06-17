@@ -32,6 +32,22 @@
         "type": "github"
       }
     },
+    "claude-code-toolkit": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1774206845,
+        "narHash": "sha256-elY74EisKoO9eW0HOMyB8NtqBxZsMfEoklKpppcFv/s=",
+        "owner": "robertguss",
+        "repo": "claude-code-toolkit",
+        "rev": "c31f3be8c2bdeff0242a6cd84081bc82c6acd8f5",
+        "type": "github"
+      },
+      "original": {
+        "owner": "robertguss",
+        "repo": "claude-code-toolkit",
+        "type": "github"
+      }
+    },
     "code-review-skill": {
       "flake": false,
       "locked": {
@@ -68,6 +84,7 @@
       "inputs": {
         "anthropic-skills": "anthropic-skills",
         "awesome-llm-apps": "awesome-llm-apps",
+        "claude-code-toolkit": "claude-code-toolkit",
         "code-review-skill": "code-review-skill",
         "nixpkgs": "nixpkgs",
         "rust-skills": "rust-skills",
