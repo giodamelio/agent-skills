@@ -57,7 +57,13 @@ If the user provided guidance on how to split the commits, use that guidance to 
    jj describe -m "feat: final piece of the implementation"
    ```
 
-8. **Verify the result**
+8. **Create a new empty commit on top**
+   After all the split commits are in place, create a fresh empty working-copy commit so the user lands on a clean slate ready for their next change:
+   ```bash
+   jj new
+   ```
+
+9. **Verify the result**
    ```bash
    # Check the new commit structure
    jj log
