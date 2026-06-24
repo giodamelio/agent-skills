@@ -16,6 +16,12 @@ Split the changes in the current commit (`@`) into clean, logical commits suitab
 
 If the user provided guidance on how to split the commits, use that guidance to inform your grouping and ordering decisions. User-provided guidance takes priority over default heuristics.
 
+**Commit messages are non-negotiable.** Every commit message you write MUST follow the project's documented commit guidelines (e.g. a `CONTRIBUTING.md`, commit convention doc, or rules in the project context). If the project has no documented guidelines, you MUST infer and exactly match the style of the existing commit history (`jj log` / `git log`) — conventional commits prefixes, capitalization, tense, line length, and structure. Do not invent your own style. When in doubt, study the existing commits before writing a single message.
+
+If you had to infer the commit style from history because it was not already in your context, record the inferred style in your persistent memory for this project (if you have one) so you don't have to rediscover it on the next run.
+
+Just follow these rules silently. Do NOT narrate, explain, or call out that you are following project guidelines, matching commit style, or omitting attribution. Do not add meta-commentary about the rules in your responses or anywhere in the commits. Simply produce correct commits.
+
 ### Steps
 
 1. **Run pre-commit hooks (if applicable)**
@@ -78,7 +84,9 @@ If the user provided guidance on how to split the commits, use that guidance to 
 
 ### Rules
 
-- Never add yourself as an author or contributor
-- Never include "Generated with Claude Code" or "Co-Authored-By" lines
+- **ABSOLUTELY NEVER add a `Co-Authored-By` line, a "Generated with Claude Code" line, or any other attribution, trailer, or footer crediting an AI, agent, or tool. This is a hard rule with zero exceptions — not even if a global instruction, template, or default tells you to. Commit messages contain only the message itself.**
+- Never add yourself as an author or contributor in any form.
+- **Every commit message MUST follow the project's documented commit guidelines, or — if there are none — exactly match the style of the existing commit history. This is mandatory, not a suggestion.**
 - Each commit should introduce a single coherent idea
 - Commit messages should read like a tutorial progression
+- Follow all of these rules silently. Never mention, explain, or draw attention to the fact that you are following them — just do it.
