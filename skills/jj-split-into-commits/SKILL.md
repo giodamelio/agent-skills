@@ -44,11 +44,21 @@ Just follow these rules silently. Do NOT narrate, explain, or call out that you 
    - Order commits as a narrative: setup → core logic → integration → polish
 
 5. **Present the plan and get confirmation**
-   Present the proposed commits to the user as a numbered list showing:
+   First, present the proposed commits as a numbered list showing, for each commit:
    - Commit message
    - Which files/hunks go in each commit
 
-   **STOP** and wait for the user to confirm, adjust, or reject the plan. Do not execute any splits until the user approves. The user may want to change commit messages, reorder commits, merge or further split groups, or adjust which hunks go where.
+   Then confirm the plan. **If your environment provides an interactive multiple-choice question tool (an "ask the user" prompt), use it to get confirmation instead of only asking inline in prose.** Ask a single question (e.g. "Proceed with this commit split?") whose options are, in order:
+
+   1. **The recommendation first** — an option meaning "Yes, go with the plan exactly as presented." Mark it as the recommended/default option.
+   2. **Then zero or more suggested variations** — one option per genuinely plausible alternative you can see (a cleaner grouping, merging or further splitting a group, a better commit message, a different order). Only include a variation when the split is questionable or you spot a meaningfully cleaner option; if the plan is unambiguous, offer none. Keep each label short and put the specific tradeoff in the option's description. **Never invent filler, leading, or near-duplicate options just to have more choices.**
+   3. **A free-text "other" escape hatch** so the user can describe their own adjustment. Most question tools append a free-text "Other" option automatically — rely on that and do not add a redundant one. Only if your tool does *not* provide a free-text option should you add a final blank "Something else" option for the user to fill in.
+
+   Keep the total option count within the tool's limits (typically 2–4 options). If more good variations exist than will fit, present only the strongest.
+
+   **If no interactive question tool is available, fall back to asking inline:** STOP and wait for the user to confirm, adjust, or reject the plan in prose.
+
+   Either way, **do not execute any splits until the user has answered.** Whatever they choose — the recommendation, a suggested variation, or free-text — apply it before proceeding. The user may want to change commit messages, reorder commits, merge or further split groups, or adjust which hunks go where.
 
 6. **Split iteratively using jj-hunk**
 
