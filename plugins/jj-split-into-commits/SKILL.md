@@ -1,4 +1,5 @@
 ---
+name: jj-split-into-commits
 description: Split the current commit's changes into clean, logical commits
 allowed-tools: Bash(jj:*), Bash(jj-hunk:*), Bash(pre-commit:*)
 model: opus
@@ -38,10 +39,10 @@ Just follow these rules silently. Do NOT narrate, explain, or call out that you 
    - Review the full scope of changes to understand what needs splitting
 
 4. **Plan the commit storyline**
-   - Study the changes: `jj-hunk list | jq 'keys'`
-   - If the user provided split guidance, use it as the primary basis for grouping and ordering
-   - Group files by logical concern (e.g., schema, migrations, services, tests)
-   - Order commits as a narrative: setup → core logic → integration → polish
+   - Delegate change exploration to the bundled `explore-changes` subagent. It inspects the diff (`jj-hunk list`, `jj diff`) in its own context and returns a proposed grouping of files/hunks into atomic commits with suggested messages and rationale. Pass it the user's split guidance (if any) so it can factor that in.
+   - Treat the subagent's output as a proposal, not a final answer: reconcile it with any user-provided guidance (which takes priority) and your own judgment of the diff.
+   - Group files by logical concern (e.g., schema, migrations, services, tests).
+   - Order commits as a narrative: setup → core logic → integration → polish.
 
 5. **Present the plan and get confirmation**
    First, present the proposed commits as a numbered list showing, for each commit:

@@ -109,44 +109,94 @@
           '';
         };
 
-      # --- Hooks ---
-      # A hook is a generic, agent-agnostic spec:
-      #   { name; script; event; tool ? null; }
-      # where `event` is an abstract trigger name and `script` is a path, an inline
-      # multiline string, or a derivation. A per-agent renderer turns a group of hooks
-      # into that agent's format. Only Claude Code is implemented for now.
+      # --- Hooks & Claude Code plugins ---
+      # Plugin/hook inputs are validated through the module system (lib.evalModules),
+      # so typos, bad event names, and wrong-typed scripts fail at eval with a clear
+      # message instead of producing a broken plugin.
       lib = pkgs.lib;
+      inherit (lib) types mkOption;
 
-      # Map a generic event name to Claude Code's event vocabulary.
-      ccEvent = e:
-        {
-          "pre-tool-use" = "PreToolUse";
-          "post-tool-use" = "PostToolUse";
-          "session-start" = "SessionStart";
-          "user-prompt-submit" = "UserPromptSubmit";
-        }
-        .${
-          e
+      # Generic hook event name -> Claude Code event name. Also the source of truth
+      # for the `event` option's allowed values.
+      ccEventMap = {
+        "pre-tool-use" = "PreToolUse";
+        "post-tool-use" = "PostToolUse";
+        "session-start" = "SessionStart";
+        "user-prompt-submit" = "UserPromptSubmit";
+      };
+
+      # Hook script option type. Like the nixpkgs idiom for inline-or-path scripts,
+      # this coerces to a single executable file: an inline multiline string is
+      # wrapped with writeShellScript, an executable package (writeShellApplication /
+      # writeShellScriptBin) is resolved via lib.getExe, and a plain path passes
+      # through. (Pass inline text rather than a bare writeShellScript derivation.)
+      exeScriptType =
+        types.coercedTo
+        (types.either types.str types.package)
+        (v:
+          if builtins.isString v
+          then pkgs.writeShellScript "hook" v
+          else lib.getExe v)
+        types.path;
+
+      # A single hook: one script fired on one event, optionally tool-scoped.
+      hookType = types.submodule {
+        options = {
+          name = mkOption {
+            type = types.str;
+            description = "Hook name; its script installs as hooks/<name>.sh.";
+          };
+          script = mkOption {
+            type = exeScriptType;
+            description = "Inline script string, a repo path, or an executable package.";
+          };
+          event = mkOption {
+            type = types.enum (builtins.attrNames ccEventMap);
+            description = "Generic event that triggers the hook.";
+          };
+          tool = mkOption {
+            type = types.nullOr types.str;
+            default = null;
+            description = ''Optional tool matcher (e.g. "Bash"); omitted means no matcher.'';
+          };
         };
+      };
 
-      # Resolve a hook's `script` (path | inline string | derivation) to one
-      # executable file in the store, reusing lib.getExe for packages.
-      hookScriptFile = s:
-        if builtins.isString s
-        then pkgs.writeShellScript "hook" s
-        else if builtins.isPath s
-        then s
-        else if s ? meta.mainProgram
-        then lib.getExe s # writeShellApplication / writeShellScriptBin
-        else s; # writeShellScript file
+      # Options schema for mkClaudePlugin.
+      pluginModule = {
+        options = {
+          name = mkOption {
+            type = types.str;
+            description = "Plugin name and output subdir; loads as <name>@skills-dir.";
+          };
+          description = mkOption {
+            type = types.str;
+            description = "Plugin description, written to plugin.json.";
+          };
+          version = mkOption {
+            type = types.str;
+            default = "0.1.0";
+            description = "Plugin version, written to plugin.json.";
+          };
+          src = mkOption {
+            type = types.nullOr types.path;
+            default = null;
+            description = "Authored plugin content (SKILL.md, agents/, ...), gomplate-processed.";
+          };
+          hooks = mkOption {
+            type = types.listOf hookType;
+            default = [];
+            description = "Hooks rendered into hooks/hooks.json plus their scripts.";
+          };
+        };
+      };
 
-      # Build a Claude Code hooks.json structure from a list of hook specs.
-      # Hooks sharing an `event` are grouped into that event's array.
+      # Build a Claude Code hooks.json from validated hooks, grouping by event.
       mkHooksJson = hooks: let
         entries =
           map (h: {
-            event = ccEvent h.event;
-            matcher = h.tool or null;
+            event = ccEventMap.${h.event};
+            inherit (h) tool;
             command = ''bash "''${CLAUDE_PLUGIN_ROOT}/hooks/${h.name}.sh"'';
           })
           hooks;
@@ -160,37 +210,45 @@
               }
             ];
           }
-          // (lib.optionalAttrs (e.matcher != null) {matcher = e.matcher;});
+          // (lib.optionalAttrs (e.tool != null) {matcher = e.tool;});
         byEvent = ev: map entryFor (lib.filter (e: e.event == ev) entries);
       in {hooks = lib.genAttrs events byEvent;};
 
-      # Render a group of hooks as a skills-directory plugin: a single-subdir output
-      # ($out/<name>/) holding the plugin manifest, the generated hooks.json, and each
-      # hook's script. Symlinked into .claude/skills/, it auto-loads as <name>@skills-dir.
-      mkClaudeHookPlugin = {
-        name,
-        description,
-        hooks,
-      }:
-        pkgs.runCommand name {} ''
-          mkdir -p "$out/${name}/.claude-plugin" "$out/${name}/hooks"
+      # Render a Claude Code skills-directory plugin: a single-subdir output
+      # ($out/<name>/) with a generated .claude-plugin/plugin.json manifest.
+      #   src   — authored plugin content copied in and gomplate-processed.
+      #   hooks — validated hook specs rendered to hooks/hooks.json + scripts.
+      # `args` is validated against pluginModule. Symlinked into .claude/skills/,
+      # the result auto-loads as <name>@skills-dir, bundling its skills/agents/hooks.
+      mkClaudePlugin = args: let
+        cfg = (lib.evalModules {modules = [pluginModule args];}).config;
+        inherit (cfg) name;
+      in
+        pkgs.runCommand name {nativeBuildInputs = [pkgs.gomplate pkgs.fd];} ''
+          mkdir -p "$out/${name}/.claude-plugin"
           cp ${pkgs.writeText "plugin.json" (builtins.toJSON {
-            inherit name description;
-            version = "0.1.0";
+            inherit (cfg) name description version;
           })} "$out/${name}/.claude-plugin/plugin.json"
-          cp ${pkgs.writeText "hooks.json" (builtins.toJSON (mkHooksJson hooks))} "$out/${name}/hooks/hooks.json"
-          ${lib.concatMapStringsSep "\n" (h: ''
-              cp ${hookScriptFile h.script} "$out/${name}/hooks/${h.name}.sh"
-              chmod +x "$out/${name}/hooks/${h.name}.sh"
-            '')
-            hooks}
+          ${lib.optionalString (cfg.src != null) ''
+            cp -r ${cfg.src}/. "$out/${name}/"
+            chmod -R u+w "$out/${name}"
+            fd -e md . "$out/${name}" -x gomplate -d "refs=file://${./references}/" -f {} -o {}
+          ''}
+          ${lib.optionalString (cfg.hooks != []) ''
+            mkdir -p "$out/${name}/hooks"
+            cp ${pkgs.writeText "hooks.json" (builtins.toJSON (mkHooksJson cfg.hooks))} "$out/${name}/hooks/hooks.json"
+            ${lib.concatMapStringsSep "\n" (h: ''
+                cp ${h.script} "$out/${name}/hooks/${h.name}.sh"
+                chmod +x "$out/${name}/hooks/${h.name}.sh"
+              '')
+              cfg.hooks}
+          ''}
         '';
 
       # --- Skills ---
       github-skill-installer = mkLocalSkill "github-skill-installer";
       jujutsu = mkLocalSkill "jujutsu";
       obsidian-projects = mkLocalSkill "obsidian-projects";
-      jj-split-into-commits = mkLocalSkill "jj-split-into-commits";
       update-fork = mkLocalSkill "update-fork";
       skill-creator =
         mkExternalSkill "skill-creator"
@@ -208,12 +266,14 @@
         mkExternalSkill "handoff"
         claude-code-toolkit "skills/handoff";
 
-      allSkills = [github-skill-installer jujutsu jj-split-into-commits obsidian-projects update-fork skill-creator code-review rust-skills-pkg python-expert handoff];
+      allSkills = [github-skill-installer jujutsu obsidian-projects update-fork skill-creator code-review rust-skills-pkg python-expert handoff];
 
-      # --- Hook plugins (Claude Code) ---
-      # First group: jj-related guardrails, bundling two hooks to exercise the
-      # multiple-hooks path. Add more groups the same way, named by functionality.
-      jj-hooks = mkClaudeHookPlugin {
+      # --- Claude Code plugins ---
+      # Skills-directory plugins installed into .claude/skills only. Each bundles
+      # some mix of skills/agents/hooks via mkClaudePlugin.
+
+      # jj guardrail hooks, bundling two hooks to exercise the multiple-hooks path.
+      jj-hooks = mkClaudePlugin {
         name = "jj-hooks";
         description = "Guardrails steering git/interactive-jj usage toward jj-hunk";
         hooks = [
@@ -231,16 +291,27 @@
           }
         ];
       };
+
+      # Commit-splitting skill bundled with a change-exploration subagent. The
+      # single root SKILL.md is the plugin's default skill, so it stays invocable
+      # as /jj-split-into-commits (unchanged), and ships agents/explore-changes.md.
+      jj-split-into-commits = mkClaudePlugin {
+        name = "jj-split-into-commits";
+        description = "Split the current commit's changes into clean, logical commits, with a bundled change-exploration agent";
+        src = ./plugins/jj-split-into-commits;
+      };
+
+      allPlugins = [jj-hooks jj-split-into-commits];
     in {
-      inherit github-skill-installer jujutsu jj-split-into-commits obsidian-projects update-fork skill-creator code-review python-expert handoff jj-hooks;
+      inherit github-skill-installer jujutsu obsidian-projects update-fork skill-creator code-review python-expert handoff jj-hooks jj-split-into-commits;
       rust-skills = rust-skills-pkg;
 
       default = pkgs.symlinkJoin {
         name = "all-skills";
-        paths = allSkills ++ [jj-hooks];
+        paths = allSkills ++ allPlugins;
       };
 
-      # Script to quickly symlink the skills (and Claude-only hook plugins) into place
+      # Script to quickly symlink the skills and Claude Code plugins into place
       install = let
         manifest = mkManifest pkgs [
           {
@@ -248,7 +319,7 @@
             targets = [".claude/skills" ".omp/agent/skills"];
           }
           {
-            items = [jj-hooks];
+            items = allPlugins;
             targets = [".claude/skills"];
           }
         ];
@@ -273,7 +344,7 @@
             [".claude/skills" ".omp/skills"])
           + "\n"
           + (mkSkillsShellHook
-            [packages.jj-hooks]
+            [packages.jj-hooks packages.jj-split-into-commits]
             [".claude/skills"]);
 
         packages = [
