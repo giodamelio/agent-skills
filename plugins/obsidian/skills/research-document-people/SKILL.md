@@ -8,11 +8,13 @@ disable-model-invocation: true
 
 Given a document, deep-research every **person** named in it, write a profile for each to `People/`, and turn their names in the document into Obsidian wikilinks pointing at those profiles. Works on **any file** — a company profile, meeting notes, an article, a roster — not just company notes.
 
-This skill is an **orchestrator**. It finds the people, fans out one subagent per person to research them all in parallel (each following the `research-person` skill), then rewrites the source document to link them. It does **not** research anyone itself.
+This skill is a **thin front-end** over the `research-people-in-document` **workflow** bundled with this plugin (in `workflows/`). It does the two things a background workflow can't: it **finds the people** and **confirms the list with you**. Then it hands the confirmed list to the workflow, which does the heavy research per person **in parallel** and links the document. This skill does **not** research anyone itself.
+
+The workflow deliberately fans out the research **itself** — for each person it locks identity, then spawns the **five `researcher-person-*` facet researchers in parallel** (the same agents `research-person` uses), then synthesizes and writes the profile. It does this at the workflow layer rather than by running the `research-person` skill inside an agent, because **agents spawned by a workflow cannot spawn their own subagents** — an agent told to "fan out five researchers" would collapse to one agent doing all five inline (shallow). Fanning out here keeps every person at full five-facet depth, with each person's agents fully isolated from every other person's.
 
 ## Input
 
-A path to the target document (the "source document"). If the user didn't name one, ask which file. Any text file works for extraction; the linking step (§3) assumes an Obsidian/Markdown note, since wikilinks only make sense there.
+A path to the target document (the "source document"). If the user didn't name one, ask which file. Any text file works for extraction; the linking step assumes an Obsidian/Markdown note, since wikilinks only make sense there.
 
 ## 1. Extract the people
 
@@ -21,44 +23,48 @@ Read the source document and list the **individual people** named in it.
 - Include real, named individuals — founders, executives, authors, quoted people, attendees, investors, etc.
 - **Exclude** companies, products, organizations, and unnamed roles ("the CTO" with no name). Companies are the `research-company` skill's job, not this one.
 - For each person, capture the **in-document context** that disambiguates them — role, the company/org they're tied to, location, anything the document states. This is what makes the research land on the *right* same-named person, so pass it through.
-- Note the **exact text** each name appears as (e.g. "Jane Q. Doe", "Doe", "Jane") so you can link the right spans in §3.
+- Note the **exact text** each name appears as (e.g. "Jane Q. Doe", "Doe", "Jane") so the workflow can link the right spans.
 
 Present the detected list to the user — name + in-doc context — **before** the heavy research. If the list is long, let them prune it: researching each person fans out several agents, so this is real work. Proceed once confirmed.
 
-## 2. Research each person — one subagent per person, all at once
+## 2. Hand off to the workflow
 
-Research the people **in parallel**: launch **one subagent per confirmed person**, all in a **single message** (multiple Agent calls) so they run concurrently instead of one-after-another. Use a **general-purpose** subagent so it inherits the full toolset — including the `Agent` tool, which it needs to run `research-person`'s own five-agent fan-out (see below).
+Once the user confirms the list, invoke the **`research-people-in-document` workflow** and pass it the confirmed people plus the source document. The workflow does the heavy lifting: per person it locks identity, fans out the **five `researcher-person-*` facet researchers in parallel**, and writes `People/<Name>.md`; then it rewrites the source document to wikilink the confirmed people and returns a structured report.
 
-Give each subagent a prompt that:
-- Names the **one** person it owns, plus the disambiguating in-doc context (role, company, location) you gathered.
-- Tells it to **run the `research-person` skill** for that person, end to end — disambiguation (§0), fresh-vs-refresh (§0.5), the facet fan-out (§3), and writing `People/<Full Name>.md` in the required format (§4–§5). Inside the subagent, `research-person` spawns its five `researcher-person-*` researchers as **nested** subagents, so every person **and** every facet is researched concurrently.
-- Because it runs unattended alongside the others, it must **not** stop to ask the user: if the doc context doesn't settle a same-name collision, it should **skip** the person and report that, rather than guess.
-- **Returns**: the exact `People/<Name>.md` filename it wrote, the display-name → canonical-name mapping (so you can alias links in §3), and a skip/failure flag with the reason if it couldn't confirm identity.
+The workflow ships **inside this plugin** (it is deliberately *not* a named `.claude/workflows/` command, so it stays out of your slash-command autocomplete). Invoke it by **`scriptPath`**, not by name. The plugin always installs to a fixed location, so both paths you need — the workflow script and `research-person`'s `SKILL.md` (the workflow's agents read the latter for the disambiguation method + Obsidian output format) — are at deterministic paths:
 
-> Nested subagents (a subagent spawning its own subagents) require Claude Code v2.1.172+, with a max depth of 5 — this flow only goes two levels deep, so it's well within the limit. On older versions the per-person subagent can't fan out; tell it to gather the five facets **inline** instead — still correct, just less parallel within each person.
+```
+scriptPath (workflow) : $HOME/.claude/skills/obsidian/workflows/research-people-in-document.js
+skillPath  (args)     : $HOME/.claude/skills/obsidian/skills/research-person/SKILL.md
+```
 
-Collect all subagent results before moving on:
-- Already has a `People/` file → the subagent takes `research-person`'s refresh path and still returns the canonical filename for linking.
-- Couldn't confirm a person → no file, no link; carry the reason into the §4 report.
+Then call the Workflow tool with the script path as `scriptPath` and `args` as a JSON object. (The harness may deliver `args` to the script JSON-**stringified** even when you pass a real object — that's expected; the workflow parses it defensively. Pass a real object regardless.) The `args` shape:
 
-## 3. Link the people in the source document
+```
+scriptPath: "<resolved workflow-script path>"
+args: {
+  document:   "<absolute path to the source document>",
+  today:      "<YYYY-MM-DD — today's date>",
+  isMarkdown: true,
+  skillPath:  "<resolved research-person SKILL.md path>",
+  people: [
+    { name: "Jane Doe",
+      context: "co-founder & CEO of Acme, based in San Francisco",
+      mentions: ["Jane Q. Doe", "Doe", "Jane"] }
+  ]
+}
+```
 
-Once all the subagents have returned, rewrite the **source document** so each researched person's name becomes a wikilink to their new profile.
+- `name` — the best full name to research. `context` — the disambiguating in-doc detail you gathered in §1. `mentions` — every exact span the name appears as, for the linking step.
+- Pass `today` explicitly (the workflow can't read the clock). Set `isMarkdown` to `false` for a non-Markdown source so the workflow creates the profiles but skips wikilink insertion.
+- The workflow runs unattended, so each person's identity agent is told to **skip** (not ask) when the in-doc context can't settle a same-name collision — it reports the skip instead of guessing.
 
-- Profiles live at `People/<Full Name>.md`; wikilinks resolve by filename across the vault, so **`[[Full Name]]`** links correctly from wherever the source document lives.
-- If the name in the document matches the canonical filename, wrap it: `Jane Doe` → `[[Jane Doe]]`.
-- If the document's text differs from the canonical name (a short form, initials, "Doe"), use the **alias form** so the visible text is unchanged: `[[Jane Doe|Doe]]`.
-- Link each plain-prose mention. **Do not**:
-  - re-wrap a name already inside a `[[wikilink]]` or a Markdown link,
-  - touch names inside code blocks, inline code, or YAML frontmatter,
-  - link anyone you didn't create a confirmed profile for.
-- Change **only** the person mentions — leave the rest of the document byte-for-byte intact.
+> The workflow watches live under `/workflows`: an `Identify` group (one agent per person), a `Research` group (five `<facet>:<name>` agents per person, running concurrently), a `Write` group (one per person), then a single `Link` agent. Because the workflow fans the facets out itself, no nested subagent spawning is involved.
 
-If the source file isn't Markdown (so wikilinks don't apply), still create the `People/` profiles but skip link insertion and say so in the summary.
+## 3. Report
 
-## 4. Report
+The workflow returns a structured result: `created`, `refreshed`, and `skipped` people, plus a `linking` block (links added, per name). Turn it into a short chat summary for the user:
 
-Summarize in chat:
-- People found, and profiles **created** vs **refreshed**.
+- People found, and profiles **created** vs **refreshed** (with each refresh's one-line "what changed").
 - Links added to the source document (count + which names).
-- Anyone **skipped** and why (ambiguous, unconfirmed, or already linked).
+- Anyone **skipped** and why (ambiguous, unconfirmed, or non-Markdown source so no links).
