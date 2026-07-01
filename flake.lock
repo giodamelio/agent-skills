@@ -32,6 +32,22 @@
         "type": "github"
       }
     },
+    "camoufox-cli": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1781794163,
+        "narHash": "sha256-+kmsUEOfvwhm2Fi+bj7+YNYGL6NDDGCsNijKqt/vSXY=",
+        "owner": "Bin-Huang",
+        "repo": "camoufox-cli",
+        "rev": "27232524aaf417e429f21dac8caa7d4df03197fd",
+        "type": "github"
+      },
+      "original": {
+        "owner": "Bin-Huang",
+        "repo": "camoufox-cli",
+        "type": "github"
+      }
+    },
     "claude-code-toolkit": {
       "flake": false,
       "locked": {
@@ -84,6 +100,7 @@
       "inputs": {
         "anthropic-skills": "anthropic-skills",
         "awesome-llm-apps": "awesome-llm-apps",
+        "camoufox-cli": "camoufox-cli",
         "claude-code-toolkit": "claude-code-toolkit",
         "code-review-skill": "code-review-skill",
         "nixpkgs": "nixpkgs",

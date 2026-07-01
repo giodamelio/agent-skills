@@ -21,6 +21,10 @@
       url = "github:robertguss/claude-code-toolkit";
       flake = false;
     };
+    camoufox-cli = {
+      url = "github:Bin-Huang/camoufox-cli";
+      flake = false;
+    };
     smfh = {
       url = "github:feel-co/smfh";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -35,6 +39,7 @@
     rust-skills,
     awesome-llm-apps,
     claude-code-toolkit,
+    camoufox-cli,
     smfh,
   }: let
     forAllSystems = nixpkgs.lib.genAttrs [
@@ -265,8 +270,11 @@
       handoff =
         mkExternalSkill "handoff"
         claude-code-toolkit "skills/handoff";
+      camoufox-cli-pkg =
+        mkExternalSkill "camoufox-cli"
+        camoufox-cli "skills/camoufox-cli";
 
-      allSkills = [github-skill-installer jujutsu obsidian-projects update-fork skill-creator code-review rust-skills-pkg python-expert handoff];
+      allSkills = [github-skill-installer jujutsu obsidian-projects update-fork skill-creator code-review rust-skills-pkg python-expert handoff camoufox-cli-pkg];
 
       # --- Claude Code plugins ---
       # Skills-directory plugins installed into .claude/skills only. Each bundles
@@ -305,6 +313,7 @@
     in {
       inherit github-skill-installer jujutsu obsidian-projects update-fork skill-creator code-review python-expert handoff jj-hooks jj-split-into-commits;
       rust-skills = rust-skills-pkg;
+      camoufox-cli = camoufox-cli-pkg;
 
       default = pkgs.symlinkJoin {
         name = "all-skills";
