@@ -320,9 +320,18 @@
         src = ./plugins/jj-split-into-commits;
       };
 
-      allPlugins = [jj-hooks jj-split-into-commits];
+      # Company-research skill bundled with five parallel researcher subagents.
+      # The skill sets disable-model-invocation, so it's user-invoked only; the
+      # agents live in agents/ and are namespaced obsidian:researcher-company-*.
+      obsidian = mkClaudePlugin {
+        name = "obsidian";
+        description = "Obsidian vault research tooling: a company-research skill with five parallel researcher agents";
+        src = ./plugins/obsidian;
+      };
+
+      allPlugins = [jj-hooks jj-split-into-commits obsidian];
     in {
-      inherit github-skill-installer jujutsu obsidian-projects update-fork skill-creator code-review python-expert handoff jj-hooks jj-split-into-commits;
+      inherit github-skill-installer jujutsu obsidian-projects update-fork skill-creator code-review python-expert handoff jj-hooks jj-split-into-commits obsidian;
       rust-skills = rust-skills-pkg;
       camofox-cli = camofox-cli-pkg;
 
@@ -364,7 +373,7 @@
             [".claude/skills" ".omp/skills"])
           + "\n"
           + (mkSkillsShellHook
-            [packages.jj-hooks packages.jj-split-into-commits]
+            [packages.jj-hooks packages.jj-split-into-commits packages.obsidian]
             [".claude/skills"]);
 
         packages = [
