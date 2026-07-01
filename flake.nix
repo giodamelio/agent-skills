@@ -320,12 +320,16 @@
         src = ./plugins/jj-split-into-commits;
       };
 
-      # Company-research skill bundled with five parallel researcher subagents.
-      # The skill sets disable-model-invocation, so it's user-invoked only; the
-      # agents live in agents/ and are namespaced obsidian:researcher-company-*.
+      # Obsidian research tooling. Two deep-research skills (research-company,
+      # research-person), each bundled with five parallel researcher subagents
+      # (agents/ namespaced obsidian:researcher-company-* / -person-*), plus a
+      # research-document-people orchestrator that invokes research-person for
+      # every person named in a file and links them. research-company and
+      # research-document-people set disable-model-invocation (user-invoked only);
+      # research-person stays model-invocable so the orchestrator can call it.
       obsidian = mkClaudePlugin {
         name = "obsidian";
-        description = "Obsidian vault research tooling: a company-research skill with five parallel researcher agents";
+        description = "Obsidian vault research tooling: company, person, and document-people research skills with parallel researcher agents";
         src = ./plugins/obsidian;
       };
 
