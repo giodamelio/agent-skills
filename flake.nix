@@ -270,11 +270,22 @@
       handoff =
         mkExternalSkill "handoff"
         claude-code-toolkit "skills/handoff";
-      camoufox-cli-pkg =
-        mkExternalSkill "camoufox-cli"
-        camoufox-cli "skills/camoufox-cli";
+      # Upstream is "camoufox-cli", but we vendor it under the name "camofox-cli"
+      # and rewrite every "camoufox" reference to match (case-preserving).
+      camofox-cli-pkg = pkgs.stdenv.mkDerivation {
+        name = "camofox-cli";
+        src = camoufox-cli;
+        nativeBuildInputs = [pkgs.fd];
+        dontUnpack = true;
+        installPhase = ''
+          mkdir -p "$out/camofox-cli"
+          cp -r "$src"/skills/camoufox-cli/* "$out/camofox-cli/"
+          chmod -R u+w "$out/camofox-cli"
+          fd -t f . "$out/camofox-cli" -x sed -i 's/amoufox/amofox/g; s/AMOUFOX/AMOFOX/g' {}
+        '';
+      };
 
-      allSkills = [github-skill-installer jujutsu obsidian-projects update-fork skill-creator code-review rust-skills-pkg python-expert handoff camoufox-cli-pkg];
+      allSkills = [github-skill-installer jujutsu obsidian-projects update-fork skill-creator code-review rust-skills-pkg python-expert handoff camofox-cli-pkg];
 
       # --- Claude Code plugins ---
       # Skills-directory plugins installed into .claude/skills only. Each bundles
@@ -313,7 +324,7 @@
     in {
       inherit github-skill-installer jujutsu obsidian-projects update-fork skill-creator code-review python-expert handoff jj-hooks jj-split-into-commits;
       rust-skills = rust-skills-pkg;
-      camoufox-cli = camoufox-cli-pkg;
+      camofox-cli = camofox-cli-pkg;
 
       default = pkgs.symlinkJoin {
         name = "all-skills";
