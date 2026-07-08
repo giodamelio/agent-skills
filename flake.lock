@@ -48,6 +48,22 @@
         "type": "github"
       }
     },
+    "claude-code-daodan": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1781686906,
+        "narHash": "sha256-iG1kp9P7mAIm5ArioraDzFF24R9iu2ZWebo4iQ3NdTY=",
+        "owner": "acaprino",
+        "repo": "claude-code-daodan",
+        "rev": "b4b1179aa1a17f284a6676f624449ecfd8acd2d8",
+        "type": "github"
+      },
+      "original": {
+        "owner": "acaprino",
+        "repo": "claude-code-daodan",
+        "type": "github"
+      }
+    },
     "claude-code-toolkit": {
       "flake": false,
       "locked": {
@@ -101,6 +117,7 @@
         "anthropic-skills": "anthropic-skills",
         "awesome-llm-apps": "awesome-llm-apps",
         "camoufox-cli": "camoufox-cli",
+        "claude-code-daodan": "claude-code-daodan",
         "claude-code-toolkit": "claude-code-toolkit",
         "code-review-skill": "code-review-skill",
         "nixpkgs": "nixpkgs",
