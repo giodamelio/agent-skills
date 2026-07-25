@@ -122,7 +122,8 @@
         "code-review-skill": "code-review-skill",
         "nixpkgs": "nixpkgs",
         "rust-skills": "rust-skills",
-        "smfh": "smfh"
+        "smfh": "smfh",
+        "tuicr": "tuicr"
       }
     },
     "rust-overlay": {
@@ -196,6 +197,22 @@
       "original": {
         "owner": "nix-systems",
         "repo": "default",
+        "type": "github"
+      }
+    },
+    "tuicr": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1784682679,
+        "narHash": "sha256-nrfGoChZCdFc5Kogj/OcGbZan6JNsVSVoKMDoNvGsXg=",
+        "owner": "agavra",
+        "repo": "tuicr",
+        "rev": "acddeb1e6fdfd274e4304ecc0dd210563b112914",
+        "type": "github"
+      },
+      "original": {
+        "owner": "agavra",
+        "repo": "tuicr",
         "type": "github"
       }
     }

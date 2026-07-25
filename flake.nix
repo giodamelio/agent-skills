@@ -29,6 +29,10 @@
       url = "github:acaprino/claude-code-daodan";
       flake = false;
     };
+    tuicr = {
+      url = "github:agavra/tuicr";
+      flake = false;
+    };
     smfh = {
       url = "github:feel-co/smfh";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -45,6 +49,7 @@
     claude-code-toolkit,
     camoufox-cli,
     claude-code-daodan,
+    tuicr,
     smfh,
   }: let
     forAllSystems = nixpkgs.lib.genAttrs [
@@ -294,7 +299,11 @@
         mkExternalSkill "firefox-extension-dev"
         claude-code-daodan "plugins/browser-extensions/skills/firefox-extension-dev";
 
-      allSkills = [github-skill-installer jujutsu obsidian-projects update-fork skill-creator code-review rust-skills-pkg python-expert handoff camofox-cli-pkg firefox-extension-dev];
+      tuicr-pkg =
+        mkExternalSkill "tuicr"
+        tuicr "skills/tuicr";
+
+      allSkills = [github-skill-installer jujutsu obsidian-projects update-fork skill-creator code-review rust-skills-pkg python-expert handoff camofox-cli-pkg firefox-extension-dev tuicr-pkg];
 
       # --- Claude Code plugins ---
       # Skills-directory plugins installed into .claude/skills only. Each bundles
@@ -347,6 +356,7 @@
       inherit github-skill-installer jujutsu obsidian-projects update-fork skill-creator code-review python-expert handoff firefox-extension-dev jj-hooks jj-split-into-commits obsidian;
       rust-skills = rust-skills-pkg;
       camofox-cli = camofox-cli-pkg;
+      tuicr = tuicr-pkg;
 
       default = pkgs.symlinkJoin {
         name = "all-skills";
