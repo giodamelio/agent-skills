@@ -1,0 +1,9 @@
+{
+  "unison-lsp": {
+    "command": "nc",
+    "args": ["127.0.0.1", "5757"],
+    "extensionToLanguage": {
+      ".u": "unison"
+    }
+  }
+}

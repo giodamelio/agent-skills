@@ -343,9 +343,18 @@
         src = ./plugins/obsidian;
       };
 
-      allPlugins = [jj-hooks jj-split-into-commits obsidian];
+      # Unison language server, proxied over TCP to a running UCM instance.
+      # Ships only .lsp.json — the plugin exists solely to register the LSP
+      # server, since Claude Code loads LSP config from plugins, not projects.
+      unison = mkClaudePlugin {
+        name = "unison";
+        description = "Unison language server, proxied to a running UCM instance";
+        src = ./plugins/unison;
+      };
+
+      allPlugins = [jj-hooks jj-split-into-commits obsidian unison];
     in {
-      inherit github-skill-installer jujutsu obsidian-projects update-fork tuicr skill-creator code-review python-expert handoff firefox-extension-dev jj-hooks jj-split-into-commits obsidian;
+      inherit github-skill-installer jujutsu obsidian-projects update-fork tuicr skill-creator code-review python-expert handoff firefox-extension-dev jj-hooks jj-split-into-commits obsidian unison;
       rust-skills = rust-skills-pkg;
       camofox-cli = camofox-cli-pkg;
 
@@ -387,7 +396,7 @@
             [".claude/skills" ".omp/skills"])
           + "\n"
           + (mkSkillsShellHook
-            [packages.jj-hooks packages.jj-split-into-commits packages.obsidian]
+            [packages.jj-hooks packages.jj-split-into-commits packages.obsidian packages.unison]
             [".claude/skills"]);
 
         packages = [
