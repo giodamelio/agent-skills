@@ -261,6 +261,7 @@
       obsidian-projects = mkLocalSkill "obsidian-projects";
       update-fork = mkLocalSkill "update-fork";
       tuicr = mkLocalSkill "tuicr";
+      unison-development = mkLocalSkill "unison-development";
       skill-creator =
         mkExternalSkill "skill-creator"
         anthropic-skills "skills/skill-creator";
@@ -295,7 +296,7 @@
         mkExternalSkill "firefox-extension-dev"
         claude-code-daodan "plugins/browser-extensions/skills/firefox-extension-dev";
 
-      allSkills = [github-skill-installer jujutsu obsidian-projects update-fork tuicr skill-creator code-review rust-skills-pkg python-expert handoff camofox-cli-pkg firefox-extension-dev];
+      allSkills = [github-skill-installer jujutsu obsidian-projects update-fork tuicr skill-creator code-review rust-skills-pkg python-expert handoff camofox-cli-pkg firefox-extension-dev unison-development];
 
       # --- Claude Code plugins ---
       # Skills-directory plugins installed into .claude/skills only. Each bundles
@@ -354,7 +355,7 @@
 
       allPlugins = [jj-hooks jj-split-into-commits obsidian unison];
     in {
-      inherit github-skill-installer jujutsu obsidian-projects update-fork tuicr skill-creator code-review python-expert handoff firefox-extension-dev jj-hooks jj-split-into-commits obsidian unison;
+      inherit github-skill-installer jujutsu obsidian-projects update-fork tuicr skill-creator code-review python-expert handoff firefox-extension-dev unison-development jj-hooks jj-split-into-commits obsidian unison;
       rust-skills = rust-skills-pkg;
       camofox-cli = camofox-cli-pkg;
 
