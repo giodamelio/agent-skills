@@ -258,6 +258,7 @@
       # --- Skills ---
       github-skill-installer = mkLocalSkill "github-skill-installer";
       jujutsu = mkLocalSkill "jujutsu";
+      jj-hunk = mkLocalSkill "jj-hunk";
       obsidian-projects = mkLocalSkill "obsidian-projects";
       update-fork = mkLocalSkill "update-fork";
       tuicr = mkLocalSkill "tuicr";
@@ -296,7 +297,28 @@
         mkExternalSkill "firefox-extension-dev"
         claude-code-daodan "plugins/browser-extensions/skills/firefox-extension-dev";
 
-      allSkills = [github-skill-installer jujutsu obsidian-projects update-fork tuicr skill-creator code-review rust-skills-pkg python-expert handoff camofox-cli-pkg firefox-extension-dev unison-development];
+      allSkills = [github-skill-installer jujutsu jj-hunk obsidian-projects update-fork tuicr skill-creator code-review rust-skills-pkg python-expert handoff camofox-cli-pkg firefox-extension-dev unison-development];
+
+      # Explicit grouping keeps Claude-only plugins out of the Codex catalog.
+      codexGroups = {
+        jj = [jujutsu jj-hunk];
+        github-skill-installer = [github-skill-installer];
+        obsidian-projects = [obsidian-projects];
+        update-fork = [update-fork];
+        tuicr = [tuicr];
+        unison-development = [unison-development];
+        skill-creator = [skill-creator];
+        code-review = [code-review];
+        rust-skills = [rust-skills-pkg];
+        python-expert = [python-expert];
+        handoff = [handoff];
+        camofox-cli = [camofox-cli-pkg];
+        firefox-extension-dev = [firefox-extension-dev];
+      };
+      codex-marketplace = import ./nix/codex-marketplace.nix {
+        inherit pkgs;
+        groups = codexGroups;
+      };
 
       # --- Claude Code plugins ---
       # Skills-directory plugins installed into .claude/skills only. Each bundles
@@ -355,13 +377,21 @@
 
       allPlugins = [jj-hooks jj-split-into-commits obsidian unison];
     in {
-      inherit github-skill-installer jujutsu obsidian-projects update-fork tuicr skill-creator code-review python-expert handoff firefox-extension-dev unison-development jj-hooks jj-split-into-commits obsidian unison;
+      inherit codex-marketplace jj-hunk github-skill-installer jujutsu obsidian-projects update-fork tuicr skill-creator code-review python-expert handoff firefox-extension-dev unison-development jj-hooks jj-split-into-commits obsidian unison;
       rust-skills = rust-skills-pkg;
       camofox-cli = camofox-cli-pkg;
 
       default = pkgs.symlinkJoin {
         name = "all-skills";
         paths = allSkills ++ allPlugins;
+      };
+
+      install-codex = pkgs.writeShellApplication {
+        name = "activate-codex-skills";
+        runtimeInputs = [pkgs.nushell];
+        text = ''
+          exec nu --no-config-file ${./scripts}/activate-codex-skills.nu "$@"
+        '';
       };
 
       # Script to quickly symlink the skills and Claude Code plugins into place

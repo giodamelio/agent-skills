@@ -6,6 +6,8 @@ giodamelio's personal collection of LLM agent skills. Skills are **agent-agnosti
 
 - `skills/` — portable, **agent-agnostic** skills (one subdirectory each). Installed to both `.claude/skills/` and the oh-my-pi skills dir.
 - `plugins/` — **Claude Code plugins** (one subdirectory each), bundling skills/agents/hooks. These are Claude-specific and may use Claude-only features (subagents, hooks). Installed to `.claude/skills/` only, where they auto-load as `<name>@skills-dir`. See [Claude Code Plugin Development](#claude-code-plugin-development).
+- `nix/` — Nix packaging helpers, including generated Codex skill-only plugins. Codex plugins are assembled from standalone skill derivations; `plugins/` remains Claude-specific.
+- `scripts/` — Nushell scripts for Codex marketplace activation and validation.
 - `hooks/` — hook scripts (payloads) assembled into plugins by `flake.nix`.
 - `references/` — shared files included into skills/plugins at build time (see [Shared References](#shared-references)).
 
@@ -30,6 +32,8 @@ Skills are packaged as Nix derivations in `flake.nix`:
 
 - `nix build` — builds all skills (local + external) combined into a single output
 - `nix build .#<skill-name>` — builds an individual skill (e.g. `nix build .#jujutsu`)
+- `nix build .#codex-marketplace` — generates the Codex marketplace and skill-only plugins; do not edit generated manifests or add Codex-specific instructions to portable skills.
+- `nix run .#install-codex` — installs/upgrades a dedicated Nix profile and refreshes all Codex marketplace plugins.
 - `nix develop` — enters a devshell that symlinks external skills (skill-creator) into `.claude/skills/` and `.omp/skills/` for agent discovery
 - The default package is intended for home-manager consumption to install all skills globally
 
