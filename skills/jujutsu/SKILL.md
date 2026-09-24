@@ -1,3 +1,8 @@
+---
+name: jujutsu
+description: Use Jujutsu (jj) for version control operations in jj repositories, including inspecting changes, creating and refining commits, resolving conflicts, and managing bookmarks.
+---
+
 # Jujutsu (jj) Version Control System
 
 This skill helps you work with Jujutsu, a Git-compatible VCS with mutable commits and automatic rebasing.
