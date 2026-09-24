@@ -8,3 +8,10 @@ entry = "validate-skills"
 language = "system"
 pass_filenames = false
 always_run = true
+
+[[repos.hooks]]
+id = "alejandra"
+name = "Check Nix formatting"
+entry = "alejandra --check"
+language = "system"
+files = "\\.nix$"

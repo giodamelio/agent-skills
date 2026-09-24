@@ -435,6 +435,7 @@
           smfh.packages.${system}.default
           pkgs.gomplate
           pkgs.prek
+          pkgs.alejandra
           packages.validate-skills
         ];
       };
