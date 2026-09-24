@@ -55,23 +55,36 @@ def marketplace-matches [] {
     $data.marketplaces | where name == agent-skills
 }
 
-def check-registration [matches: list, root: path, --newly-added] {
+def profile-roots [profile: path] {
+    # Nix keeps numbered profile generations alongside the current symlink.
+    # Codex resolves local marketplace sources to one of these store paths.
+    glob $"($profile)-*-link"
+        | each { |generation| $generation | path join share codex-marketplace | path expand }
+        | append ($profile | path join share codex-marketplace | path expand)
+        | uniq
+}
+
+def check-registration [matches: list, root: path, profile: path, --newly-added] {
     if ($matches | length) != 1 {
         error make {msg: 'Marketplace registration: expected exactly one agent-skills marketplace'}
     }
     let entry = ($matches | first)
     let source = $entry.marketplaceSource?
-    # Compare the recorded source without resolving symlinks. Otherwise a source
-    # pinned to the current Nix store generation would appear to be correct.
-    if $source.sourceType? != local or $source.source? != $root {
+    let recorded = $source.source?
+    let current = ($root | path expand)
+    if $source.sourceType? != local or $recorded not-in (profile-roots $profile | append $root) {
         if $newly_added {
-            error make {msg: $"Codex CLI incompatibility: marketplace add did not preserve the stable profile path. Requested ($root); recorded ($source.source?). This registration cannot follow upgrades or rollback. No plugins were installed; the profile remains installed. Use a CLI that preserves source symlinks, explicitly remove the pinned registration with `codex plugin marketplace remove agent-skills`, then retry with --refresh-only."}
+            error make {msg: $"Marketplace registration recorded an unexpected source: ($recorded); expected a generation of ($profile)"}
         }
-        error make {msg: $"Marketplace conflict: agent-skills is registered at ($source.source?); expected ($root)"}
+        error make {msg: $"Marketplace conflict: agent-skills is registered at ($recorded); expected a generation of ($profile)"}
     }
-    if ($entry.root | path expand) != ($root | path expand) {
-        error make {msg: 'Marketplace conflict: registered root does not resolve to the current profile'}
+    if ($entry.root | path expand) != ($recorded | path expand) {
+        error make {msg: 'Marketplace conflict: registered root does not match its source'}
     }
+    if $newly_added and $recorded != $root and $recorded != $current {
+        error make {msg: $"Marketplace registration did not use the current profile generation: ($recorded)"}
+    }
+    $recorded == $root or $recorded == $current
 }
 
 # Install or upgrade the dedicated Nix profile, then refresh every Codex plugin.
@@ -124,10 +137,14 @@ def activate [source: any, profile: any, refresh_only: bool] {
     let matches = (marketplace-matches)
     if ($matches | is-empty) {
         run-command 'Marketplace registration' codex [plugin marketplace add $root]
-        # Exit status alone does not prove that Codex retained the stable source.
-        check-registration (marketplace-matches) $root --newly-added
+        # Exit status alone does not prove that Codex recorded this generation.
+        let _ = (check-registration (marketplace-matches) $root $profile --newly-added)
     } else {
-        check-registration $matches $root
+        if not (check-registration $matches $root $profile) {
+            run-command 'Marketplace removal' codex [plugin marketplace remove agent-skills]
+            run-command 'Marketplace registration' codex [plugin marketplace add $root]
+            let _ = (check-registration (marketplace-matches) $root $profile --newly-added)
+        }
     }
     mut failures = []
     for name in $names {

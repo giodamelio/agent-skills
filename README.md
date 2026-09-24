@@ -31,18 +31,14 @@ paths and the packaging schema version. Changing one skill changes its containin
 plugin's version; unchanged derivations retain their versions. No timestamps or
 edits to installed manifests are needed.
 
-### Current CLI limitation
+### Local marketplace paths
 
-**Codex CLI 0.155.1 does not retain the stable profile source.** During isolated
-verification, `codex plugin marketplace add <profile>/share/codex-marketplace`
-records the resolved `/nix/store/.../share/codex-marketplace` directory instead.
-That registration cannot follow profile upgrades or rollback. The helper checks
-registration immediately and exits nonzero before installing plugins if the
-stable source was lost. The Nix profile remains installed; no cache is deleted and
-no existing registration is automatically replaced.
-
-The one-command workflow below requires a CLI that preserves the supplied local
-source path. Full end-to-end acceptance is blocked on that behavior in 0.155.1.
+Codex CLI resolves the profile symlink when registering a local marketplace, so
+the recorded source is a `/nix/store/...` path. The helper accepts a source from
+the current or a retained older generation of the dedicated profile. When the
+recorded source points to an older generation, it removes and re-adds that
+marketplace before refreshing plugins. An unrelated source with the same
+marketplace name remains a conflict.
 
 ### Setup and updates
 
@@ -54,7 +50,7 @@ nix run ~/projects/giodamelio/agent-skills#install-codex
 ```
 
 Run that same command after editing skills. It installs or upgrades one marketplace
-package in a dedicated, ordinary Nix profile, registers the stable profile path,
+package in a dedicated, ordinary Nix profile, registers the current marketplace,
 and installs/reinstalls **every** plugin in its catalog, including newly added ones.
 Start a **new Codex conversation** afterward to pick up the refreshed skills.
 
@@ -62,7 +58,7 @@ Defaults:
 
 - Checkout: `$HOME/projects/giodamelio/agent-skills`
 - Profile: `${XDG_STATE_HOME:-$HOME/.local/state}/nix/profiles/codex-marketplace`
-- Registered source: `<profile>/share/codex-marketplace`
+- Registered source: the Nix store path resolved from `<profile>/share/codex-marketplace`
 
 Override the checkout or profile at runtime:
 
@@ -117,22 +113,21 @@ build before upgrading.
   refuses profiles containing unrelated packages, pinned sources, multiple
   packages, or a different checkout. Select the correct source/profile or use a
   fresh dedicated profile.
-- **CLI incompatibility after registration:** check the limitation above. After
-  obtaining a CLI that preserves the source path, explicitly remove the pinned
-  registration with `codex plugin marketplace remove agent-skills`, then rerun
-  with `--refresh-only`. Merely retrying on 0.155.1 will not fix this.
 - **Marketplace conflict:** inspect `codex plugin marketplace list --json`.
-  `agent-skills` must refer to the exact stable profile path, not a Nix store path
-  or an old generation. The helper never replaces a conflicting registration.
-  If you intend to replace it, explicitly run `codex plugin marketplace remove
-  agent-skills`, then rerun the helper.
+  `agent-skills` must refer to the dedicated profile or one of its retained
+  generations. The helper refreshes registrations from older generations and
+  leaves unrelated registrations alone.
+- **No changes in `nix profile history`:** Nix can show this for a package whose
+  version did not change even when its store path and contents changed. Compare
+  `storePaths` in `nix profile list --json` or inspect the generated skill file.
 - **Build failure:** no Codex commands run. Fix the build and rerun the helper.
 - **Registration or plugin failure after an upgrade:** the profile stays updated.
   Fix the reported issue and retry with `--refresh-only`. All plugins are retried;
   the helper does not delete caches.
 - **Removed catalog entry:** existing Codex installations are not automatically
   uninstalled. Explicitly remove one with `codex plugin remove NAME@agent-skills`.
-- **Old skills in an open conversation:** start a new conversation after refresh.
+- **Old skills in an open or resumed conversation:** start a new conversation after
+  refresh. Resuming an earlier conversation can retain its old skill metadata.
 
 The packaging follows the [official OpenAI plugin format and marketplace layout](https://developers.openai.com/plugins/build/plugins).
 
