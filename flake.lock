@@ -122,7 +122,8 @@
         "code-review-skill": "code-review-skill",
         "nixpkgs": "nixpkgs",
         "rust-skills": "rust-skills",
-        "smfh": "smfh"
+        "smfh": "smfh",
+        "superpowers": "superpowers"
       }
     },
     "rust-overlay": {
@@ -181,6 +182,22 @@
       "original": {
         "owner": "feel-co",
         "repo": "smfh",
+        "type": "github"
+      }
+    },
+    "superpowers": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1789777895,
+        "narHash": "sha256-rgeJhjQyABYlhlyFRmgyhbZmmmIPPNkch4CXyTkGEyM=",
+        "owner": "obra",
+        "repo": "superpowers",
+        "rev": "5bf4e78011075bcfc0dc295f0724994cd123ee71",
+        "type": "github"
+      },
+      "original": {
+        "owner": "obra",
+        "repo": "superpowers",
         "type": "github"
       }
     },

@@ -29,6 +29,10 @@
       url = "github:acaprino/claude-code-daodan";
       flake = false;
     };
+    superpowers = {
+      url = "github:obra/superpowers";
+      flake = false;
+    };
     smfh = {
       url = "github:feel-co/smfh";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -45,6 +49,7 @@
     claude-code-toolkit,
     camoufox-cli,
     claude-code-daodan,
+    superpowers,
     smfh,
   }: let
     forAllSystems = nixpkgs.lib.genAttrs [
@@ -376,11 +381,21 @@
         src = ./plugins/unison;
       };
 
+      # Vendored upstream plugin, kept out of allPlugins so it stays opt-in:
+      # load it per session with `claude --plugin-dir ./result/superpowers`.
+      # Not built with mkClaudePlugin, which would replace upstream's plugin.json
+      # and run gomplate over upstream markdown.
+      superpowers-pkg = pkgs.runCommand "superpowers" {} ''
+        mkdir -p "$out/superpowers"
+        cp -r ${superpowers}/.claude-plugin ${superpowers}/skills ${superpowers}/hooks "$out/superpowers/"
+      '';
+
       allPlugins = [jj-hooks jj-split-into-commits obsidian unison];
     in {
       inherit codex-marketplace validate-skills jj-hunk github-skill-installer jujutsu obsidian-projects update-fork tuicr skill-creator code-review python-expert handoff firefox-extension-dev unison-development jj-hooks jj-split-into-commits obsidian unison;
       rust-skills = rust-skills-pkg;
       camofox-cli = camofox-cli-pkg;
+      superpowers = superpowers-pkg;
 
       default = pkgs.symlinkJoin {
         name = "all-skills";
