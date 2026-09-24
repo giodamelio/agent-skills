@@ -1,4 +1,5 @@
 ---
+name: obsidian-projects
 description: Manage Obsidian vault project notes and inline TODO items, task lists, and project tasks for the current working directory
 ---
 

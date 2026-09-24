@@ -1,3 +1,8 @@
+---
+name: update-fork
+description: Rebase a fork onto upstream while preserving local changes, resolving conflicts, and keeping a rollback path.
+---
+
 # Update Fork
 
 Rebase a fork's local changes onto updated upstream. This skill covers the complete workflow: assessing the situation, creating safety backups, executing the rebase, resolving conflicts with a local-changes-first policy, and cleaning up after user confirmation.

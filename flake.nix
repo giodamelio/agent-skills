@@ -319,6 +319,7 @@
         inherit pkgs;
         groups = codexGroups;
       };
+      validate-skills = import ./nix/validate-skills.nix {inherit pkgs;};
 
       # --- Claude Code plugins ---
       # Skills-directory plugins installed into .claude/skills only. Each bundles
@@ -377,7 +378,7 @@
 
       allPlugins = [jj-hooks jj-split-into-commits obsidian unison];
     in {
-      inherit codex-marketplace jj-hunk github-skill-installer jujutsu obsidian-projects update-fork tuicr skill-creator code-review python-expert handoff firefox-extension-dev unison-development jj-hooks jj-split-into-commits obsidian unison;
+      inherit codex-marketplace validate-skills jj-hunk github-skill-installer jujutsu obsidian-projects update-fork tuicr skill-creator code-review python-expert handoff firefox-extension-dev unison-development jj-hooks jj-split-into-commits obsidian unison;
       rust-skills = rust-skills-pkg;
       camofox-cli = camofox-cli-pkg;
 
@@ -433,6 +434,8 @@
         packages = [
           smfh.packages.${system}.default
           pkgs.gomplate
+          pkgs.prek
+          packages.validate-skills
         ];
       };
     });

@@ -1,0 +1,10 @@
+[[repos]]
+repo = "local"
+
+[[repos.hooks]]
+id = "validate-skills"
+name = "Validate skill frontmatter"
+entry = "validate-skills"
+language = "system"
+pass_filenames = false
+always_run = true
