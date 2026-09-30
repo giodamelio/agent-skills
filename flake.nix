@@ -415,7 +415,7 @@
         manifest = mkManifest pkgs [
           {
             items = allSkills;
-            targets = [".claude/skills" ".omp/agent/skills"];
+            targets = [".claude/skills" ".omp/agent/skills" ".pi/agent/skills"];
           }
           {
             items = allPlugins;
@@ -440,7 +440,7 @@
         shellHook =
           (mkSkillsShellHook
             [packages.skill-creator]
-            [".claude/skills" ".omp/skills"])
+            [".claude/skills" ".omp/skills" ".pi/skills"])
           + "\n"
           + (mkSkillsShellHook
             [packages.jj-hooks packages.jj-split-into-commits packages.obsidian packages.unison]

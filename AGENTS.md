@@ -34,7 +34,7 @@ Skills are packaged as Nix derivations in `flake.nix`:
 - `nix build .#<skill-name>` — builds an individual skill (e.g. `nix build .#jujutsu`)
 - `nix build .#codex-marketplace` — generates the Codex marketplace and skill-only plugins; do not edit generated manifests or add Codex-specific instructions to portable skills.
 - `nix run .#install-codex` — installs/upgrades a dedicated Nix profile and refreshes all Codex marketplace plugins.
-- `nix develop` — enters a devshell that symlinks external skills (skill-creator) into `.claude/skills/` and `.omp/skills/` for agent discovery
+- `nix develop` — enters a devshell that symlinks external skills (skill-creator) into `.claude/skills/`, `.omp/skills/`, and `.pi/skills/` for agent discovery
 - The default package is intended for home-manager consumption to install all skills globally
 
 ## Shared References
