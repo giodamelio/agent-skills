@@ -48,6 +48,7 @@ Just follow these rules silently. Do NOT narrate, explain, or call out that you 
    First, present the proposed commits as a numbered list showing, for each commit:
    - Commit message
    - Which files/hunks go in each commit
+   - The hunkset query that will select it, or "spec" with the reason no query works
 
    Then confirm the plan. **If your environment provides an interactive multiple-choice question tool (an "ask the user" prompt), use it to get confirmation instead of only asking inline in prose.** Ask a single question (e.g. "Proceed with this commit split?") whose options are, in order:
 
@@ -65,9 +66,17 @@ Just follow these rules silently. Do NOT narrate, explain, or call out that you 
 
    **NEVER use `jj split`** — it is interactive and will hang. Always use `jj-hunk split`.
 
-   First, inspect the hunks with `jj-hunk list`. Then split repeatedly, peeling off one commit at a time. Each `jj-hunk split` takes a JSON spec and a commit message. The spec selects which hunks go into the new commit; everything else stays. See the [jj-hunk reference](#jj-hunk-reference) below for spec format and commands.
+   Split repeatedly on `@`, peeling off one commit at a time in the planned order. `@` follows the remaining changes after each split, so every split runs against what is left. See the [jj-hunk reference](#jj-hunk-reference) below for queries, specs, and commands.
 
-   Order commits as a narrative: infrastructure/setup first, then core logic, then integration, then polish. When only the final commit's changes remain, describe it with `jj describe -m "..."`.
+   For each commit:
+   - **Build the selection as a hunkset query (`--query`). This is the default for every commit.** Combine `path:`, `content:`, `&`, `~`, and `|` to isolate the group. A query stays valid across splits, and a bad one fails instead of silently selecting nothing.
+   - Use a JSON spec only for a commit that no query can isolate, meaning every query you try also catches hunks planned for another commit. When you do, run `jj-hunk list --format text` immediately before writing the spec. Indices and IDs from the plan or from earlier listings are stale after every split.
+   - Preview it with `jj-hunk list --format text --query '...'` (or `--spec '...'`) and confirm it matches exactly the planned files/hunks. An empty preview means the selection is wrong; fix it rather than applying a no-op.
+   - Apply it with `jj-hunk split <selection> "message"`.
+
+   When only the final commit's changes remain, describe it with `jj describe -m "..."`.
+
+   If a hunk lands in the wrong commit, move it back with `jj-hunk squash -r <change-id> <selection>` (moves the selection into that commit's parent), or `jj undo` the last split and redo it.
 
 7. **Describe the final commit**
    ```bash

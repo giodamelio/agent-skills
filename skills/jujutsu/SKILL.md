@@ -25,7 +25,7 @@ Editor-based commands will hang in non-interactive environments.
 
 2. **NEVER use `jj squash` without `-m` or `-u`** — without one of these flags, it may open an editor and hang. **NEVER use `jj squash -i`** — it is interactive and will always hang.
 
-3. **MUST always pass a spec argument to `jj-hunk` commands** (e.g. `jj-hunk squash '<spec>'`). Running `jj-hunk squash` without a spec will block waiting on stdin.
+3. **MUST always pass a selection to `jj-hunk` commands** — either `--query '<expr>'` or a spec (e.g. `jj-hunk squash '<spec>'`). Without one, the command fails.
 
 4. **Verify operations with `jj st`** after mutations (`squash`, `abandon`, `rebase`, `restore`) to confirm the operation succeeded.
 
@@ -134,7 +134,7 @@ jj squash -u
 ```
 
 **NEVER use `jj squash` without `-m` or `-u`** — it may open an editor and hang.
-**NEVER use `jj squash -i`** — it is interactive and will always hang. Use `jj-hunk squash '<spec>'` instead for partial squashing.
+**NEVER use `jj squash -i`** — it is interactive and will always hang. Use `jj-hunk squash [-r <rev>] <selection>` instead for partial squashing from any revision into its parent.
 
 ### Splitting Commits
 
@@ -315,10 +315,11 @@ jj st
 | Restore files | `jj restore [paths]` |
 | Create bookmark | `jj bookmark create <name>` |
 | Push bookmark | `jj git push -b <name>` |
-| List hunks | `jj-hunk list` |
-| Split by hunk | `jj-hunk split '<spec>' "message"` |
-| Commit by hunk | `jj-hunk commit '<spec>' "message"` |
-| Squash by hunk | `jj-hunk squash '<spec>'` |
+| List hunks | `jj-hunk list --format text [-r <rev>]` |
+| Preview a selection | `jj-hunk list --format text --query '<expr>'` |
+| Split by hunk | `jj-hunk split [-r <rev>] (--query '<expr>' \| '<spec>') "message"` |
+| Commit by hunk | `jj-hunk commit (--query '<expr>' \| '<spec>') "message"` |
+| Squash by hunk into parent | `jj-hunk squash [-r <rev>] (--query '<expr>' \| '<spec>')` |
 
 ## Best Practices Summary
 
