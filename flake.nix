@@ -268,6 +268,7 @@
       update-fork = mkLocalSkill "update-fork";
       tuicr = mkLocalSkill "tuicr";
       unison-development = mkLocalSkill "unison-development";
+      remind-me-to = mkLocalSkill "remind-me-to";
       skill-creator =
         mkExternalSkill "skill-creator"
         anthropic-skills "skills/skill-creator";
@@ -302,7 +303,7 @@
         mkExternalSkill "firefox-extension-dev"
         claude-code-daodan "plugins/browser-extensions/skills/firefox-extension-dev";
 
-      allSkills = [github-skill-installer jujutsu jj-hunk obsidian-projects update-fork tuicr skill-creator code-review rust-skills-pkg python-expert handoff camofox-cli-pkg firefox-extension-dev unison-development];
+      allSkills = [github-skill-installer jujutsu jj-hunk obsidian-projects update-fork tuicr skill-creator code-review rust-skills-pkg python-expert handoff camofox-cli-pkg firefox-extension-dev unison-development remind-me-to];
 
       # Explicit grouping keeps Claude-only plugins out of the Codex catalog.
       codexGroups = {
@@ -392,7 +393,7 @@
 
       allPlugins = [jj-hooks jj-split-into-commits obsidian unison];
     in {
-      inherit codex-marketplace validate-skills jj-hunk github-skill-installer jujutsu obsidian-projects update-fork tuicr skill-creator code-review python-expert handoff firefox-extension-dev unison-development jj-hooks jj-split-into-commits obsidian unison;
+      inherit codex-marketplace validate-skills jj-hunk github-skill-installer jujutsu obsidian-projects update-fork tuicr skill-creator code-review python-expert handoff firefox-extension-dev unison-development remind-me-to jj-hooks jj-split-into-commits obsidian unison;
       rust-skills = rust-skills-pkg;
       camofox-cli = camofox-cli-pkg;
       superpowers = superpowers-pkg;
