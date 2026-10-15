@@ -426,7 +426,12 @@
         pkgs.writeShellApplication {
           name = "activate-skills";
           runtimeInputs = [smfh.packages.${system}.default];
+          # Symlinks in $HOME are not GC roots; a profile generation keeps the
+          # manifest's closure alive through `nh clean` / `nix store gc`.
           text = ''
+            profile="''${XDG_STATE_HOME:-$HOME/.local/state}/nix/profiles/agent-skills"
+            mkdir -p "$(dirname "$profile")"
+            nix-env --profile "$profile" --set ${manifest}
             smfh -v --impure activate ${manifest}
           '';
         };
